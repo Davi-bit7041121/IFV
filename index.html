@@ -1,0 +1,275 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>IFV Analyzer</title>
+
+<style>
+
+body{
+font-family:system-ui;
+background:#0f172a;
+color:white;
+display:flex;
+flex-direction:column;
+align-items:center;
+padding:30px;
+}
+
+.card{
+background:#1e293b;
+padding:30px;
+border-radius:12px;
+width:380px;
+box-shadow:0 10px 30px rgba(0,0,0,0.4);
+margin-bottom:20px;
+}
+
+input{
+width:100%;
+padding:10px;
+margin:10px 0;
+border-radius:6px;
+border:none;
+background:#334155;
+color:white;
+}
+
+button{
+width:100%;
+padding:12px;
+background:#22c55e;
+border:none;
+border-radius:8px;
+color:white;
+font-weight:600;
+cursor:pointer;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:20px;
+}
+
+th,td{
+padding:8px;
+text-align:center;
+border-bottom:1px solid #334155;
+}
+
+th{
+color:#94a3b8;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="card">
+
+<h2>IFV Analyzer</h2>
+
+<input id="ticker" placeholder="Digite o ticker (ex: PETR4)">
+
+<button onclick="buscar()">Calcular IFV</button>
+
+<div id="resultado"></div>
+
+</div>
+
+<div class="card">
+
+<h3>Ranking de Ações</h3>
+
+<table id="ranking">
+
+<tr>
+<th>Empresa</th>
+<th>IFV</th>
+</tr>
+
+</table>
+
+</div>
+
+<div class="card">
+
+<h3>Tabela de Pontuação</h3>
+
+<table>
+
+<tr>
+<th>Pontos</th>
+<th>ROE</th>
+<th>P/L</th>
+<th>P/VP</th>
+<th>PEG</th>
+<th>DY</th>
+<th>Dívida/EBITDA</th>
+</tr>
+
+<tr>
+<td>1</td>
+<td>&lt;5%</td>
+<td>&gt;30</td>
+<td>&gt;3</td>
+<td>&gt;2</td>
+<td>&lt;2%</td>
+<td>&gt;4</td>
+</tr>
+
+<tr>
+<td>2</td>
+<td>5–10%</td>
+<td>20–30</td>
+<td>2–3</td>
+<td>1,5–2</td>
+<td>2–4%</td>
+<td>3–4</td>
+</tr>
+
+<tr>
+<td>3</td>
+<td>10–15%</td>
+<td>12–20</td>
+<td>1–2</td>
+<td>1–1,5</td>
+<td>4–6%</td>
+<td>2–3</td>
+</tr>
+
+<tr>
+<td>4</td>
+<td>15–25%</td>
+<td>6–12</td>
+<td>0,7–1</td>
+<td>0,5–1</td>
+<td>6–10%</td>
+<td>1–2</td>
+</tr>
+
+<tr>
+<td>5</td>
+<td>&gt;25%</td>
+<td>&lt;6</td>
+<td>&lt;0,7</td>
+<td>&lt;0,5</td>
+<td>&gt;10%</td>
+<td>&lt;1</td>
+</tr>
+
+</table>
+
+</div>
+
+<script>
+
+let ranking=[]
+
+function scoreROE(v){
+if(v<5)return 1
+if(v<10)return 2
+if(v<15)return 3
+if(v<25)return 4
+return 5
+}
+
+function scorePL(v){
+if(v>30)return 1
+if(v>20)return 2
+if(v>12)return 3
+if(v>6)return 4
+return 5
+}
+
+function scorePVP(v){
+if(v>3)return 1
+if(v>2)return 2
+if(v>1)return 3
+if(v>0.7)return 4
+return 5
+}
+
+function scorePEG(v){
+if(v>2)return 1
+if(v>1.5)return 2
+if(v>1)return 3
+if(v>0.5)return 4
+return 5
+}
+
+function scoreDY(v){
+if(v<2)return 1
+if(v<4)return 2
+if(v<6)return 3
+if(v<10)return 4
+return 5
+}
+
+function scoreDivida(v){
+if(v>4)return 1
+if(v>3)return 2
+if(v>2)return 3
+if(v>1)return 4
+return 5
+}
+
+async function buscar(){
+
+let ticker=document.getElementById("ticker").value
+
+let api=0MJIDW4FVY0XP4EQ
+
+let url=`https://www.alphavantage.co/query?function=OVERVIEW&symbol=${ticker}&apikey=${api}`
+
+let res=await fetch(url)
+
+let data=await res.json()
+
+let roe=parseFloat(data.ReturnOnEquityTTM)*100
+let pl=parseFloat(data.PERatio)
+let pvp=parseFloat(data.PriceToBookRatio)
+let peg=parseFloat(data.PEGRatio)
+let dy=parseFloat(data.DividendYield)*100
+let divida=parseFloat(data.DebtToEquity)
+
+let s1=scoreROE(roe)
+let s2=scorePL(pl)
+let s3=scorePVP(pvp)
+let s4=scorePEG(peg)
+let s5=scoreDY(dy)
+let s6=scoreDivida(divida)
+
+let ifv=(s1+s2+s3+s4+s5+s6)/6
+
+document.getElementById("resultado").innerHTML=
+ticker+" → IFV: "+ifv.toFixed(2)
+
+ranking.push({ticker,ifv})
+
+ranking.sort((a,b)=>b.ifv-a.ifv)
+
+let tabela=document.getElementById("ranking")
+
+tabela.innerHTML="<tr><th>Empresa</th><th>IFV</th></tr>"
+
+ranking.forEach(r=>{
+
+tabela.innerHTML+=
+`<tr><td>${r.ticker}</td><td>${r.ifv.toFixed(2)}</td></tr>`
+
+})
+
+}
+
+</script>
+
+</body>
+</html>
