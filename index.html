@@ -3,7 +3,6 @@
 
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>IFV Analyzer</title>
 
 <style>
@@ -15,22 +14,21 @@ color:white;
 display:flex;
 flex-direction:column;
 align-items:center;
-padding:30px;
+padding:20px;
 }
 
 .card{
 background:#1e293b;
-padding:30px;
-border-radius:12px;
-width:380px;
-box-shadow:0 10px 30px rgba(0,0,0,0.4);
+padding:25px;
+border-radius:10px;
+width:420px;
 margin-bottom:20px;
 }
 
 input{
 width:100%;
-padding:10px;
-margin:10px 0;
+padding:8px;
+margin:6px 0;
 border-radius:6px;
 border:none;
 background:#334155;
@@ -38,30 +36,45 @@ color:white;
 }
 
 button{
-width:100%;
-padding:12px;
-background:#22c55e;
+padding:8px;
+margin:4px;
 border:none;
-border-radius:8px;
-color:white;
-font-weight:600;
+border-radius:6px;
 cursor:pointer;
+}
+
+.calc{
+background:#22c55e;
+color:white;
+width:100%;
+margin-top:10px;
+}
+
+.filtro{
+background:#475569;
+color:white;
 }
 
 table{
 width:100%;
 border-collapse:collapse;
-margin-top:20px;
+margin-top:10px;
 }
 
-th,td{
-padding:8px;
+td,th{
+padding:6px;
 text-align:center;
 border-bottom:1px solid #334155;
 }
 
-th{
-color:#94a3b8;
+.green{
+color:#22c55e;
+font-weight:bold;
+}
+
+.red{
+color:#ef4444;
+font-weight:bold;
 }
 
 </style>
@@ -74,15 +87,16 @@ color:#94a3b8;
 
 <h2>IFV Analyzer</h2>
 
-<input id="ticker" placeholder="Ticker (ex: PETR4)">
-<input id="roe" placeholder="ROE (%)">
+<input id="ticker" placeholder="Ticker">
+
+<input id="roe" placeholder="ROE">
 <input id="pl" placeholder="P/L">
 <input id="pvp" placeholder="P/VP">
 <input id="peg" placeholder="PEG">
-<input id="dy" placeholder="Dividend Yield (%)">
+<input id="dy" placeholder="Dividend Yield">
 <input id="divida" placeholder="Dívida/EBITDA">
 
-<button id="btnCalcular">Calcular IFV</button>
+<button class="calc" onclick="calcular()">Calcular / Atualizar</button>
 
 <div id="resultado"></div>
 
@@ -90,14 +104,27 @@ color:#94a3b8;
 
 <div class="card">
 
-<h3>Ranking de Ações</h3>
+<h3>Ranking</h3>
+
+<div>
+
+<button class="filtro" onclick="filtroAtual='todas';render()">Todas</button>
+<button class="filtro" onclick="filtroAtual='extraordinária';render()">Extraordinárias</button>
+<button class="filtro" onclick="filtroAtual='muito boa';render()">Muito boas</button>
+<button class="filtro" onclick="filtroAtual='razoável';render()">Razoáveis</button>
+<button class="filtro" onclick="filtroAtual='cara';render()">Caras</button>
+<button class="filtro" onclick="filtroAtual='muito cara';render()">Muito caras</button>
+
+</div>
 
 <table id="ranking">
 
 <tr>
-<th>Empresa</th>
+<th>#</th>
+<th>Ticker</th>
 <th>IFV</th>
 <th>Classificação</th>
+<th>Editar</th>
 </tr>
 
 </table>
@@ -108,79 +135,35 @@ color:#94a3b8;
 
 let ranking = JSON.parse(localStorage.getItem("rankingIFV")) || []
 
+let filtroAtual="todas"
+
 function classificar(ifv){
 
-if(ifv >= 4.5) return "extraordinária"
-if(ifv >= 3.5) return "muito boa"
-if(ifv >= 2.5) return "razoável"
-if(ifv >= 1.5) return "cara"
-return "muito cara"
+if(ifv>=4.5)return"extraordinária"
+if(ifv>=3.5)return"muito boa"
+if(ifv>=2.5)return"razoável"
+if(ifv>=1.5)return"cara"
+return"muito cara"
 
 }
 
-function scoreROE(v){
-if(v<5)return 1
-if(v<10)return 2
-if(v<15)return 3
-if(v<25)return 4
-return 5
-}
-
-function scorePL(v){
-if(v>30)return 1
-if(v>20)return 2
-if(v>12)return 3
-if(v>6)return 4
-return 5
-}
-
-function scorePVP(v){
-if(v>3)return 1
-if(v>2)return 2
-if(v>1)return 3
-if(v>0.7)return 4
-return 5
-}
-
-function scorePEG(v){
-if(v>2)return 1
-if(v>1.5)return 2
-if(v>1)return 3
-if(v>0.5)return 4
-return 5
-}
-
-function scoreDY(v){
-if(v<2)return 1
-if(v<4)return 2
-if(v<6)return 3
-if(v<10)return 4
-return 5
-}
-
-function scoreDivida(v){
-if(v>4)return 1
-if(v>3)return 2
-if(v>2)return 3
-if(v>1)return 4
-return 5
-}
+function scoreROE(v){if(v<5)return 1;if(v<10)return 2;if(v<15)return 3;if(v<25)return 4;return 5}
+function scorePL(v){if(v>30)return 1;if(v>20)return 2;if(v>12)return 3;if(v>6)return 4;return 5}
+function scorePVP(v){if(v>3)return 1;if(v>2)return 2;if(v>1)return 3;if(v>0.7)return 4;return 5}
+function scorePEG(v){if(v>2)return 1;if(v>1.5)return 2;if(v>1)return 3;if(v>0.5)return 4;return 5}
+function scoreDY(v){if(v<2)return 1;if(v<4)return 2;if(v<6)return 3;if(v<10)return 4;return 5}
+function scoreDivida(v){if(v>4)return 1;if(v>3)return 2;if(v>2)return 3;if(v>1)return 4;return 5}
 
 function calcular(){
 
 let ticker=document.getElementById("ticker").value.toUpperCase()
 
-let roe=parseFloat(document.getElementById("roe").value)
-let pl=parseFloat(document.getElementById("pl").value)
-let pvp=parseFloat(document.getElementById("pvp").value)
-let peg=parseFloat(document.getElementById("peg").value)
-let dy=parseFloat(document.getElementById("dy").value)
-let divida=parseFloat(document.getElementById("divida").value)
-
-if(!ticker || isNaN(roe) || isNaN(pl) || isNaN(pvp) || isNaN(peg) || isNaN(dy) || isNaN(divida)){
-alert("Preencha todos os campos.")
-return
-}
+let roe=parseFloat(roe.value)
+let pl=parseFloat(pl.value)
+let pvp=parseFloat(pvp.value)
+let peg=parseFloat(peg.value)
+let dy=parseFloat(dy.value)
+let divida=parseFloat(divida.value)
 
 let s1=scoreROE(roe)
 let s2=scorePL(pl)
@@ -193,10 +176,7 @@ let ifv=(s1+s2+s3+s4+s5+s6)/6
 
 let classificacao=classificar(ifv)
 
-document.getElementById("resultado").innerHTML =
-ticker+" → IFV: "+ifv.toFixed(2)+" | "+classificacao
-
-let index = ranking.findIndex(r=>r.ticker===ticker)
+let index=ranking.findIndex(r=>r.ticker===ticker)
 
 if(index>=0){
 
@@ -205,7 +185,7 @@ ranking[index].classificacao=classificacao
 
 }else{
 
-ranking.push({ticker,ifv,classificacao})
+ranking.push({ticker,ifv,classificacao,roe,pl,pvp,peg,dy,divida})
 
 }
 
@@ -217,31 +197,71 @@ render()
 
 }
 
+function editar(i){
+
+let r=ranking[i]
+
+ticker.value=r.ticker
+roe.value=r.roe
+pl.value=r.pl
+pvp.value=r.pvp
+peg.value=r.peg
+dy.value=r.dy
+divida.value=r.divida
+
+}
+
 function render(){
 
 let tabela=document.getElementById("ranking")
 
-tabela.innerHTML="<tr><th>Empresa</th><th>IFV</th><th>Classificação</th></tr>"
+tabela.innerHTML=`<tr>
+<th>#</th>
+<th>Ticker</th>
+<th>IFV</th>
+<th>Classificação</th>
+<th>Editar</th>
+</tr>`
 
-ranking.forEach(r=>{
+let lista=ranking
 
-tabela.innerHTML +=
-`<tr>
+if(filtroAtual!="todas"){
+
+lista=ranking.filter(r=>r.classificacao==filtroAtual)
+
+}
+
+lista.forEach((r,i)=>{
+
+let pos=i+1
+let medalha=""
+
+if(pos==1)medalha="🥇"
+if(pos==2)medalha="🥈"
+if(pos==3)medalha="🥉"
+
+let cor=""
+
+if(r.ifv>=4.5)cor="green"
+if(r.ifv<2)cor="red"
+
+tabela.innerHTML+=`
+
+<tr>
+<td>${pos} ${medalha}</td>
 <td>${r.ticker}</td>
-<td>${r.ifv.toFixed(2)}</td>
+<td class="${cor}">${r.ifv.toFixed(2)}</td>
 <td>${r.classificacao}</td>
+<td><button onclick="editar(${ranking.indexOf(r)})">Editar</button></td>
 </tr>`
 
 })
 
 }
 
-document.getElementById("btnCalcular").addEventListener("click",calcular)
-
 render()
 
 </script>
 
 </body>
-
 </html>
