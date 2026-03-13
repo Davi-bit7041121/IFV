@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-<head>
 
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>IFV Analyzer</title>
 
 <style>
@@ -83,7 +82,7 @@ color:#94a3b8;
 <input id="dy" placeholder="Dividend Yield (%)">
 <input id="divida" placeholder="Dívida/EBITDA">
 
-<button onclick="calcular()">Calcular IFV</button>
+<button id="btnCalcular">Calcular IFV</button>
 
 <div id="resultado"></div>
 
@@ -99,76 +98,6 @@ color:#94a3b8;
 <th>Empresa</th>
 <th>IFV</th>
 <th>Classificação</th>
-</tr>
-
-</table>
-
-</div>
-
-<div class="card">
-
-<h3>Tabela de Pontuação</h3>
-
-<table>
-
-<tr>
-<th>Pontos</th>
-<th>ROE</th>
-<th>P/L</th>
-<th>P/VP</th>
-<th>PEG</th>
-<th>DY</th>
-<th>Dívida/EBITDA</th>
-</tr>
-
-<tr>
-<td>1</td>
-<td>&lt;5%</td>
-<td>&gt;30</td>
-<td>&gt;3</td>
-<td>&gt;2</td>
-<td>&lt;2%</td>
-<td>&gt;4</td>
-</tr>
-
-<tr>
-<td>2</td>
-<td>5–10%</td>
-<td>20–30</td>
-<td>2–3</td>
-<td>1,5–2</td>
-<td>2–4%</td>
-<td>3–4</td>
-</tr>
-
-<tr>
-<td>3</td>
-<td>10–15%</td>
-<td>12–20</td>
-<td>1–2</td>
-<td>1–1,5</td>
-<td>4–6%</td>
-<td>2–3</td>
-</tr>
-
-<tr>
-<td>4</td>
-<td>15–25%</td>
-<td>6–12</td>
-<td>0,7–1</td>
-<td>0,5–1</td>
-<td>6–10%</td>
-<td>1–2</td>
-</tr>
-
-<tr>
-<td>5</td>
-<td>&gt;25%</td>
-<td>&lt;6</td>
-<td>&lt;0,7</td>
-<td>&lt;0,5</td>
-<td>&gt;10%</td>
-<td>&lt;1</td>
 </tr>
 
 </table>
@@ -249,7 +178,7 @@ let dy=parseFloat(document.getElementById("dy").value)
 let divida=parseFloat(document.getElementById("divida").value)
 
 if(!ticker || isNaN(roe) || isNaN(pl) || isNaN(pvp) || isNaN(peg) || isNaN(dy) || isNaN(divida)){
-alert("Preencha todos os campos corretamente.")
+alert("Preencha todos os campos.")
 return
 }
 
@@ -264,7 +193,7 @@ let ifv=(s1+s2+s3+s4+s5+s6)/6
 
 let classificacao=classificar(ifv)
 
-document.getElementById("resultado").innerHTML=
+document.getElementById("resultado").innerHTML =
 ticker+" → IFV: "+ifv.toFixed(2)+" | "+classificacao
 
 let index = ranking.findIndex(r=>r.ticker===ticker)
@@ -296,7 +225,7 @@ tabela.innerHTML="<tr><th>Empresa</th><th>IFV</th><th>Classificação</th></tr>"
 
 ranking.forEach(r=>{
 
-tabela.innerHTML+=
+tabela.innerHTML +=
 `<tr>
 <td>${r.ticker}</td>
 <td>${r.ifv.toFixed(2)}</td>
@@ -307,9 +236,12 @@ tabela.innerHTML+=
 
 }
 
+document.getElementById("btnCalcular").addEventListener("click",calcular)
+
 render()
 
 </script>
 
 </body>
+
 </html>
