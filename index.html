@@ -98,76 +98,7 @@ color:#94a3b8;
 <tr>
 <th>Empresa</th>
 <th>IFV</th>
-</tr>
-
-</table>
-
-</div>
-
-<div class="card">
-
-<h3>Tabela de Pontuação</h3>
-
-<table>
-
-<tr>
-<th>Pontos</th>
-<th>ROE</th>
-<th>P/L</th>
-<th>P/VP</th>
-<th>PEG</th>
-<th>DY</th>
-<th>Dívida/EBITDA</th>
-</tr>
-
-<tr>
-<td>1</td>
-<td>&lt;5%</td>
-<td>&gt;30</td>
-<td>&gt;3</td>
-<td>&gt;2</td>
-<td>&lt;2%</td>
-<td>&gt;4</td>
-</tr>
-
-<tr>
-<td>2</td>
-<td>5–10%</td>
-<td>20–30</td>
-<td>2–3</td>
-<td>1,5–2</td>
-<td>2–4%</td>
-<td>3–4</td>
-</tr>
-
-<tr>
-<td>3</td>
-<td>10–15%</td>
-<td>12–20</td>
-<td>1–2</td>
-<td>1–1,5</td>
-<td>4–6%</td>
-<td>2–3</td>
-</tr>
-
-<tr>
-<td>4</td>
-<td>15–25%</td>
-<td>6–12</td>
-<td>0,7–1</td>
-<td>0,5–1</td>
-<td>6–10%</td>
-<td>1–2</td>
-</tr>
-
-<tr>
-<td>5</td>
-<td>&gt;25%</td>
-<td>&lt;6</td>
-<td>&lt;0,7</td>
-<td>&lt;0,5</td>
-<td>&gt;10%</td>
-<td>&lt;1</td>
+<th>Classificação</th>
 </tr>
 
 </table>
@@ -176,7 +107,22 @@ color:#94a3b8;
 
 <script>
 
-let ranking=[]
+let ranking = JSON.parse(localStorage.getItem("rankingIFV")) || []
+
+function classificar(ifv){
+
+if(ifv >= 4.5) return "extraordinária"
+if(ifv >= 3.5) return "muito boa"
+if(ifv >= 2.5) return "razoável"
+if(ifv >= 1.5) return "cara"
+return "muito cara"
+
+}if(ifv>=4.5) return "Excelente"
+if(ifv>=3.5) return "Boa"
+if(ifv>=2.5) return "Média"
+return "Ruim"
+
+}
 
 function scoreROE(v){
 if(v<5)return 1
@@ -228,7 +174,7 @@ return 5
 
 function calcular(){
 
-let ticker=document.getElementById("ticker").value
+let ticker=document.getElementById("ticker").value.toUpperCase()
 
 let roe=parseFloat(document.getElementById("roe").value)
 let pl=parseFloat(document.getElementById("pl").value)
@@ -246,25 +192,52 @@ let s6=scoreDivida(divida)
 
 let ifv=(s1+s2+s3+s4+s5+s6)/6
 
-document.getElementById("resultado").innerHTML=
-ticker+" → IFV: "+ifv.toFixed(2)
+let classificacao=classificar(ifv)
 
-ranking.push({ticker,ifv})
+document.getElementById("resultado").innerHTML=
+ticker+" → IFV: "+ifv.toFixed(2)+" | "+classificacao
+
+let index = ranking.findIndex(r=>r.ticker===ticker)
+
+if(index>=0){
+
+ranking[index].ifv = ifv
+ranking[index].classificacao = classificacao
+
+}else{
+
+ranking.push({ticker,ifv,classificacao})
+
+}
 
 ranking.sort((a,b)=>b.ifv-a.ifv)
 
+localStorage.setItem("rankingIFV",JSON.stringify(ranking))
+
+render()
+
+}
+
+function render(){
+
 let tabela=document.getElementById("ranking")
 
-tabela.innerHTML="<tr><th>Empresa</th><th>IFV</th></tr>"
+tabela.innerHTML="<tr><th>Empresa</th><th>IFV</th><th>Classificação</th></tr>"
 
 ranking.forEach(r=>{
 
 tabela.innerHTML+=
-`<tr><td>${r.ticker}</td><td>${r.ifv.toFixed(2)}</td></tr>`
+`<tr>
+<td>${r.ticker}</td>
+<td>${r.ifv.toFixed(2)}</td>
+<td>${r.classificacao}</td>
+</tr>`
 
 })
 
 }
+
+render()
 
 </script>
 
