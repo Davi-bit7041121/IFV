@@ -134,16 +134,15 @@ font-weight:bold;
 <script>
 
 let ranking = JSON.parse(localStorage.getItem("rankingIFV")) || []
-
 let filtroAtual="todas"
 
 function classificar(ifv){
 
-if(ifv>=4.5)return"extraordinária"
-if(ifv>=3.5)return"muito boa"
-if(ifv>=2.5)return"razoável"
-if(ifv>=1.5)return"cara"
-return"muito cara"
+if(ifv>=4.5)return"Extraordinária"
+if(ifv>=3.5)return"Muito boa"
+if(ifv>=2.5)return"Razoável"
+if(ifv>=1.5)return"Cara"
+return"Muito Cara"
 
 }
 
@@ -158,12 +157,17 @@ function calcular(){
 
 let ticker=document.getElementById("ticker").value.toUpperCase()
 
-let roe=parseFloat(roe.value)
-let pl=parseFloat(pl.value)
-let pvp=parseFloat(pvp.value)
-let peg=parseFloat(peg.value)
-let dy=parseFloat(dy.value)
-let divida=parseFloat(divida.value)
+let roe=parseFloat(document.getElementById("roe").value)
+let pl=parseFloat(document.getElementById("pl").value)
+let pvp=parseFloat(document.getElementById("pvp").value)
+let peg=parseFloat(document.getElementById("peg").value)
+let dy=parseFloat(document.getElementById("dy").value)
+let divida=parseFloat(document.getElementById("divida").value)
+
+if(!ticker||isNaN(roe)||isNaN(pl)||isNaN(pvp)||isNaN(peg)||isNaN(dy)||isNaN(divida)){
+alert("Preencha todos os indicadores")
+return
+}
 
 let s1=scoreROE(roe)
 let s2=scorePL(pl)
@@ -180,8 +184,7 @@ let index=ranking.findIndex(r=>r.ticker===ticker)
 
 if(index>=0){
 
-ranking[index].ifv=ifv
-ranking[index].classificacao=classificacao
+ranking[index]={ticker,ifv,classificacao,roe,pl,pvp,peg,dy,divida}
 
 }else{
 
@@ -193,6 +196,9 @@ ranking.sort((a,b)=>b.ifv-a.ifv)
 
 localStorage.setItem("rankingIFV",JSON.stringify(ranking))
 
+document.getElementById("resultado").innerText=
+ticker+" → IFV "+ifv.toFixed(2)+" ("+classificacao+")"
+
 render()
 
 }
@@ -201,13 +207,13 @@ function editar(i){
 
 let r=ranking[i]
 
-ticker.value=r.ticker
-roe.value=r.roe
-pl.value=r.pl
-pvp.value=r.pvp
-peg.value=r.peg
-dy.value=r.dy
-divida.value=r.divida
+document.getElementById("ticker").value=r.ticker
+document.getElementById("roe").value=r.roe
+document.getElementById("pl").value=r.pl
+document.getElementById("pvp").value=r.pvp
+document.getElementById("peg").value=r.peg
+document.getElementById("dy").value=r.dy
+document.getElementById("divida").value=r.divida
 
 }
 
@@ -226,9 +232,7 @@ tabela.innerHTML=`<tr>
 let lista=ranking
 
 if(filtroAtual!="todas"){
-
 lista=ranking.filter(r=>r.classificacao==filtroAtual)
-
 }
 
 lista.forEach((r,i)=>{
@@ -264,4 +268,5 @@ render()
 </script>
 
 </body>
+
 </html>
