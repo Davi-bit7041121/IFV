@@ -1,272 +1,1111 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>IFV Analyzer</title>
-
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
 
-body{
-font-family:system-ui;
-background:#0f172a;
-color:white;
-display:flex;
-flex-direction:column;
-align-items:center;
-padding:20px;
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #080c10;
+  --surface: #0d1117;
+  --surface2: #161b22;
+  --surface3: #1f2937;
+  --border: #21262d;
+  --border-bright: #30363d;
+  --text: #e6edf3;
+  --muted: #7d8590;
+  --accent: #00e5ff;
+  --accent-dim: rgba(0,229,255,0.08);
+  --accent-border: rgba(0,229,255,0.25);
+  --green: #3fb950;
+  --green-dim: rgba(63,185,80,0.1);
+  --yellow: #d29922;
+  --yellow-dim: rgba(210,153,34,0.1);
+  --orange: #f0883e;
+  --orange-dim: rgba(240,136,62,0.1);
+  --red: #f85149;
+  --red-dim: rgba(248,81,73,0.1);
+  --gold: #ffd700;
+  --silver: #c0c0c0;
+  --bronze: #cd7f32;
+  --font-mono: 'Space Mono', monospace;
+  --font-display: 'Syne', sans-serif;
+  --radius: 8px;
+  --transition: 0.18s ease;
 }
 
-.card{
-background:#1e293b;
-padding:25px;
-border-radius:10px;
-width:420px;
-margin-bottom:20px;
+body {
+  font-family: var(--font-display);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 0;
+  overflow-x: hidden;
 }
 
-input{
-width:100%;
-padding:8px;
-margin:6px 0;
-border-radius:6px;
-border:none;
-background:#334155;
-color:white;
+/* Scanline overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.03) 2px,
+    rgba(0,0,0,0.03) 4px
+  );
+  pointer-events: none;
+  z-index: 1000;
 }
 
-button{
-padding:8px;
-margin:4px;
-border:none;
-border-radius:6px;
-cursor:pointer;
+/* Header */
+header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
-.calc{
-background:#22c55e;
-color:white;
-width:100%;
-margin-top:10px;
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-.filtro{
-background:#475569;
-color:white;
+.logo-icon {
+  width: 28px;
+  height: 28px;
+  background: var(--accent);
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: pulse-logo 3s ease-in-out infinite;
 }
 
-table{
-width:100%;
-border-collapse:collapse;
-margin-top:10px;
+@keyframes pulse-logo {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
 }
 
-td,th{
-padding:6px;
-text-align:center;
-border-bottom:1px solid #334155;
+.logo-text {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
 }
 
-.green{
-color:#22c55e;
-font-weight:bold;
+.logo-text span {
+  color: var(--accent);
 }
 
-.red{
-color:#ef4444;
-font-weight:bold;
+.header-status {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: blink 2s step-end infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Layout */
+.layout {
+  display: grid;
+  grid-template-columns: 400px 1fr;
+  gap: 0;
+  min-height: calc(100vh - 60px);
+}
+
+/* Left panel */
+.panel-left {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 28px 24px;
+  overflow-y: auto;
+}
+
+/* Right panel */
+.panel-right {
+  padding: 28px 28px 40px;
+  overflow-y: auto;
+}
+
+/* Section labels */
+.section-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--accent-border);
+}
+
+/* Form */
+.ticker-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.ticker-input-wrap {
+  flex: 1;
+  position: relative;
+}
+
+.ticker-prefix {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--accent);
+  pointer-events: none;
+  font-weight: 700;
+}
+
+#ticker {
+  padding-left: 28px;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  font-family: var(--font-mono);
+}
+
+input {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-bright);
+  background: var(--surface2);
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 14px;
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+input::placeholder {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* Indicator grid */
+.indicator-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.indicator-wrap {
+  position: relative;
+}
+
+.indicator-label {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.indicator-score {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--accent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.indicator-score.visible { opacity: 1; }
+
+.score-bar {
+  height: 2px;
+  background: var(--border);
+  border-radius: 2px;
+  margin-top: 6px;
+  overflow: hidden;
+}
+
+.score-fill {
+  height: 100%;
+  border-radius: 2px;
+  width: 0%;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Calc button */
+.btn-calc {
+  width: 100%;
+  padding: 13px;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: #000;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  transition: all var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-calc::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0);
+  transition: background var(--transition);
+}
+
+.btn-calc:hover::before { background: rgba(255,255,255,0.15); }
+.btn-calc:active { transform: scale(0.98); }
+
+/* Result box */
+#resultado {
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-bright);
+  background: var(--surface2);
+  display: none;
+  animation: slideIn 0.3s ease;
+}
+
+#resultado.visible { display: block; }
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.result-ticker {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.05em;
+}
+
+.result-ifv-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.result-ifv-label {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--muted);
+  letter-spacing: 0.1em;
+}
+
+.result-ifv-value {
+  font-family: var(--font-mono);
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.result-class {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 4px;
+}
+
+/* Gauge */
+.gauge-wrap {
+  margin-top: 14px;
+}
+
+.gauge-track {
+  height: 6px;
+  background: var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+}
+
+.gauge-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  background: linear-gradient(90deg, var(--red), var(--yellow), var(--green));
+}
+
+.gauge-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-size: 9px;
+  font-family: var(--font-mono);
+  color: var(--muted);
+}
+
+/* Right panel - Rankings */
+.ranking-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.ranking-title {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.count-badge {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border-bright);
+  padding: 4px 10px;
+  border-radius: 20px;
+  color: var(--muted);
+}
+
+/* Filters */
+.filters {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 22px;
+}
+
+.filter-btn {
+  padding: 6px 14px;
+  border: 1px solid var(--border-bright);
+  border-radius: 20px;
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all var(--transition);
+  letter-spacing: 0.05em;
+}
+
+.filter-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.filter-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #000;
+  font-weight: 700;
+}
+
+/* Stats row */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  transition: border-color var(--transition);
+}
+
+.stat-card:hover { border-color: var(--border-bright); }
+
+.stat-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+}
+
+.stat-value {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.stat-value.accent { color: var(--accent); }
+
+/* Table */
+.table-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead {
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+}
+
+th {
+  padding: 10px 16px;
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  font-weight: 400;
+  cursor: pointer;
+  transition: color var(--transition);
+  white-space: nowrap;
+}
+
+th:hover { color: var(--text); }
+th.sortable::after { content: ' ↕'; opacity: 0.4; }
+th.sort-asc::after { content: ' ↑'; opacity: 1; color: var(--accent); }
+th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--accent); }
+
+td {
+  padding: 12px 16px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+tr:last-child td { border-bottom: none; }
+
+tbody tr {
+  transition: background var(--transition);
+  cursor: default;
+}
+
+tbody tr:hover { background: var(--surface2); }
+
+.rank-num {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.medal { font-size: 14px; line-height: 1; }
+
+.ticker-cell {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.ifv-cell {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.ifv-mini-bar {
+  height: 3px;
+  background: var(--border);
+  border-radius: 3px;
+  margin-top: 4px;
+  overflow: hidden;
+  width: 60px;
+}
+
+.ifv-mini-fill {
+  height: 100%;
+  border-radius: 3px;
+}
+
+.class-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* Indicator mini pills in table */
+.indicator-pills {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.pill {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: var(--surface3);
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+
+/* Action buttons */
+.btn-edit, .btn-delete {
+  padding: 5px 10px;
+  border: 1px solid var(--border-bright);
+  border-radius: 5px;
+  background: transparent;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.btn-edit { color: var(--accent); }
+.btn-edit:hover { background: var(--accent-dim); border-color: var(--accent); }
+.btn-delete { color: var(--red); margin-left: 4px; }
+.btn-delete:hover { background: var(--red-dim); border-color: var(--red); }
+
+/* Empty state */
+.empty-state {
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--muted);
+}
+
+.empty-state .empty-icon {
+  font-size: 40px;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+.empty-state p {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.05em;
+}
+
+/* Color classes */
+.c-green { color: var(--green); }
+.c-yellow { color: var(--yellow); }
+.c-orange { color: var(--orange); }
+.c-red { color: var(--red); }
+.c-accent { color: var(--accent); }
+
+.badge-extraordinary { background: rgba(0,229,255,0.1); color: var(--accent); border: 1px solid var(--accent-border); }
+.badge-muitoboa { background: var(--green-dim); color: var(--green); border: 1px solid rgba(63,185,80,0.3); }
+.badge-razoavel { background: var(--yellow-dim); color: var(--yellow); border: 1px solid rgba(210,153,34,0.3); }
+.badge-cara { background: var(--orange-dim); color: var(--orange); border: 1px solid rgba(240,136,62,0.3); }
+.badge-muitocara { background: var(--red-dim); color: var(--red); border: 1px solid rgba(248,81,73,0.3); }
+
+/* Notification */
+.notif {
+  position: fixed;
+  top: 72px;
+  right: 20px;
+  background: var(--surface2);
+  border: 1px solid var(--accent-border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 12px 18px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text);
+  z-index: 200;
+  animation: notifIn 0.25s ease, notifOut 0.25s ease 2.5s forwards;
+  pointer-events: none;
+}
+
+@keyframes notifIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes notifOut {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(20px); }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+/* Error shake */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+.shake { animation: shake 0.35s ease; }
+
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+  .panel-left { border-right: none; border-bottom: 1px solid var(--border); }
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
 }
 
 </style>
-
 </head>
-
 <body>
 
-<div class="card">
+<header>
+  <div class="logo">
+    <div class="logo-icon"></div>
+    <div class="logo-text">IFV<span>Analyzer</span></div>
+  </div>
+  <div class="header-status">
+    <div class="status-dot"></div>
+    <span>SISTEMA ATIVO</span>
+  </div>
+</header>
 
-<h2>IFV Analyzer</h2>
+<div class="layout">
 
-<input id="ticker" placeholder="Ticker">
+  <!-- LEFT: Input Panel -->
+  <div class="panel-left">
 
-<input id="roe" placeholder="ROE">
-<input id="pl" placeholder="P/L">
-<input id="pvp" placeholder="P/VP">
-<input id="peg" placeholder="PEG">
-<input id="dy" placeholder="Dividend Yield">
-<input id="divida" placeholder="Dívida/EBITDA">
+    <div class="section-label">Entrada de Dados</div>
 
-<button class="calc" onclick="calcular()">Calcular / Atualizar</button>
+    <div class="ticker-row">
+      <div class="ticker-input-wrap">
+        <span class="ticker-prefix">$</span>
+        <input id="ticker" placeholder="TICKER" autocomplete="off" spellcheck="false" oninput="this.value=this.value.toUpperCase()">
+      </div>
+    </div>
 
-<div id="resultado"></div>
+    <div class="indicator-grid">
 
-</div>
+      <div class="indicator-wrap">
+        <div class="indicator-label">
+          ROE <span class="indicator-score" id="sc-roe">—</span>
+        </div>
+        <input id="roe" placeholder="Ex: 15.0" type="number" step="any" oninput="updateScore('roe')">
+        <div class="score-bar"><div class="score-fill" id="bar-roe"></div></div>
+      </div>
 
-<div class="card">
+      <div class="indicator-wrap">
+        <div class="indicator-label">
+          P/L <span class="indicator-score" id="sc-pl">—</span>
+        </div>
+        <input id="pl" placeholder="Ex: 12.0" type="number" step="any" oninput="updateScore('pl')">
+        <div class="score-bar"><div class="score-fill" id="bar-pl"></div></div>
+      </div>
 
-<h3>Ranking</h3>
+      <div class="indicator-wrap">
+        <div class="indicator-label">
+          P/VP <span class="indicator-score" id="sc-pvp">—</span>
+        </div>
+        <input id="pvp" placeholder="Ex: 1.5" type="number" step="any" oninput="updateScore('pvp')">
+        <div class="score-bar"><div class="score-fill" id="bar-pvp"></div></div>
+      </div>
 
-<div>
+      <div class="indicator-wrap">
+        <div class="indicator-label">
+          PEG <span class="indicator-score" id="sc-peg">—</span>
+        </div>
+        <input id="peg" placeholder="Ex: 1.0" type="number" step="any" oninput="updateScore('peg')">
+        <div class="score-bar"><div class="score-fill" id="bar-peg"></div></div>
+      </div>
 
-<button class="filtro" onclick="filtroAtual='todas';render()">Todas</button>
-<button class="filtro" onclick="filtroAtual='extraordinária';render()">Extraordinárias</button>
-<button class="filtro" onclick="filtroAtual='muito boa';render()">Muito boas</button>
-<button class="filtro" onclick="filtroAtual='razoável';render()">Razoáveis</button>
-<button class="filtro" onclick="filtroAtual='cara';render()">Caras</button>
-<button class="filtro" onclick="filtroAtual='muito cara';render()">Muito caras</button>
+      <div class="indicator-wrap">
+        <div class="indicator-label">
+          DY (%) <span class="indicator-score" id="sc-dy">—</span>
+        </div>
+        <input id="dy" placeholder="Ex: 6.5" type="number" step="any" oninput="updateScore('dy')">
+        <div class="score-bar"><div class="score-fill" id="bar-dy"></div></div>
+      </div>
 
-</div>
+      <div class="indicator-wrap">
+        <div class="indicator-label">
+          Dívi/EBIT <span class="indicator-score" id="sc-divida">—</span>
+        </div>
+        <input id="divida" placeholder="Ex: 1.5" type="number" step="any" oninput="updateScore('divida')">
+        <div class="score-bar"><div class="score-fill" id="bar-divida"></div></div>
+      </div>
 
-<table id="ranking">
+    </div>
 
-<tr>
-<th>#</th>
-<th>Ticker</th>
-<th>IFV</th>
-<th>Classificação</th>
-<th>Editar</th>
-</tr>
+    <button class="btn-calc" onclick="calcular()">↯ Calcular IFV</button>
 
-</table>
+    <div id="resultado">
+      <div class="result-ticker" id="res-ticker"></div>
+      <div class="result-ifv-row">
+        <span class="result-ifv-label">IFV</span>
+        <span class="result-ifv-value" id="res-ifv"></span>
+        <span style="font-family:var(--font-mono);font-size:11px;color:var(--muted)">/5</span>
+      </div>
+      <div class="result-class" id="res-class"></div>
+      <div class="gauge-wrap">
+        <div class="gauge-track"><div class="gauge-fill" id="res-gauge"></div></div>
+        <div class="gauge-labels">
+          <span>Muito Cara</span>
+          <span>Razoável</span>
+          <span>Extraordinária</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: Rankings -->
+  <div class="panel-right">
+
+    <div class="ranking-header">
+      <div class="ranking-title">Ranking</div>
+      <div class="count-badge" id="count-badge">0 ativos</div>
+    </div>
+
+    <div class="stats-row" id="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Total</div>
+        <div class="stat-value accent" id="st-total">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Melhor IFV</div>
+        <div class="stat-value" id="st-best">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Média IFV</div>
+        <div class="stat-value" id="st-avg">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Extraordinárias</div>
+        <div class="stat-value c-accent" id="st-extr">0</div>
+      </div>
+    </div>
+
+    <div class="section-label" style="margin-bottom:14px">Filtrar por Classificação</div>
+
+    <div class="filters">
+      <button class="filter-btn active" onclick="setFilter('todas', this)">Todas</button>
+      <button class="filter-btn" onclick="setFilter('extraordinária', this)">Extraordinária</button>
+      <button class="filter-btn" onclick="setFilter('muito boa', this)">Muito Boa</button>
+      <button class="filter-btn" onclick="setFilter('razoável', this)">Razoável</button>
+      <button class="filter-btn" onclick="setFilter('cara', this)">Cara</button>
+      <button class="filter-btn" onclick="setFilter('muito cara', this)">Muito Cara</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:50px">#</th>
+            <th class="sortable" onclick="sortBy('ticker')">Ticker</th>
+            <th class="sortable sort-desc" onclick="sortBy('ifv')">IFV</th>
+            <th>Classificação</th>
+            <th>Indicadores</th>
+            <th style="text-align:right">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div id="empty-state" class="empty-state" style="display:none">
+        <div class="empty-icon">📊</div>
+        <p>Nenhum ativo encontrado.<br>Adicione um ativo no painel ao lado.</p>
+      </div>
+    </div>
+
+  </div>
 
 </div>
 
 <script>
+let ranking = JSON.parse(localStorage.getItem("rankingIFV")) || [];
+let filtroAtual = "todas";
+let sortCol = "ifv";
+let sortDir = "desc";
 
-let ranking = JSON.parse(localStorage.getItem("rankingIFV")) || []
-let filtroAtual="todas"
+// Score functions
+const scoreROE = v => v<5?1:v<10?2:v<15?3:v<25?4:5;
+const scorePL = v => v>30?1:v>20?2:v>12?3:v>6?4:5;
+const scorePVP = v => v>3?1:v>2?2:v>1?3:v>0.7?4:5;
+const scorePEG = v => v>2?1:v>1.5?2:v>1?3:v>0.5?4:5;
+const scoreDY = v => v<2?1:v<4?2:v<6?3:v<10?4:5;
+const scoreDivida = v => v>4?1:v>3?2:v>2?3:v>1?4:5;
 
-function classificar(ifv){
+const scoreMap = { roe: scoreROE, pl: scorePL, pvp: scorePVP, peg: scorePEG, dy: scoreDY, divida: scoreDivida };
 
-if(ifv>=4.5)return"Extraordinária"
-if(ifv>=3.5)return"Muito boa"
-if(ifv>=2.5)return"Razoável"
-if(ifv>=1.5)return"Cara"
-return"Muito Cara"
+const scoreColor = s => s<=1?'var(--red)':s<=2?'var(--orange)':s<=3?'var(--yellow)':s<=4?'var(--green)':'var(--accent)';
 
+const classifyIFV = ifv =>
+  ifv >= 4.5 ? "extraordinária" :
+  ifv >= 3.5 ? "muito boa" :
+  ifv >= 2.5 ? "razoável" :
+  ifv >= 1.5 ? "cara" : "muito cara";
+
+const classBadgeKey = c => c.replace(/\s/g,'').replace(/ã/g,'a').replace(/é/g,'e').replace(/ó/g,'o').replace(/á/g,'a');
+const classBadgeClass = c => 'badge-' + classBadgeKey(c);
+
+function classColor(c) {
+  if (c === "extraordinária") return 'var(--accent)';
+  if (c === "muito boa") return 'var(--green)';
+  if (c === "razoável") return 'var(--yellow)';
+  if (c === "cara") return 'var(--orange)';
+  return 'var(--red)';
 }
 
-function scoreROE(v){if(v<5)return 1;if(v<10)return 2;if(v<15)return 3;if(v<25)return 4;return 5}
-function scorePL(v){if(v>30)return 1;if(v>20)return 2;if(v>12)return 3;if(v>6)return 4;return 5}
-function scorePVP(v){if(v>3)return 1;if(v>2)return 2;if(v>1)return 3;if(v>0.7)return 4;return 5}
-function scorePEG(v){if(v>2)return 1;if(v>1.5)return 2;if(v>1)return 3;if(v>0.5)return 4;return 5}
-function scoreDY(v){if(v<2)return 1;if(v<4)return 2;if(v<6)return 3;if(v<10)return 4;return 5}
-function scoreDivida(v){if(v>4)return 1;if(v>3)return 2;if(v>2)return 3;if(v>1)return 4;return 5}
-
-function calcular(){
-
-let ticker=document.getElementById("ticker").value.toUpperCase()
-
-let roe=parseFloat(document.getElementById("roe").value)
-let pl=parseFloat(document.getElementById("pl").value)
-let pvp=parseFloat(document.getElementById("pvp").value)
-let peg=parseFloat(document.getElementById("peg").value)
-let dy=parseFloat(document.getElementById("dy").value)
-let divida=parseFloat(document.getElementById("divida").value)
-
-if(!ticker||isNaN(roe)||isNaN(pl)||isNaN(pvp)||isNaN(peg)||isNaN(dy)||isNaN(divida)){
-alert("Preencha todos os indicadores")
-return
+function updateScore(field) {
+  const val = parseFloat(document.getElementById(field).value);
+  const sc = document.getElementById('sc-' + field);
+  const bar = document.getElementById('bar-' + field);
+  if (isNaN(val)) {
+    sc.textContent = '—';
+    sc.classList.remove('visible');
+    bar.style.width = '0%';
+    bar.style.background = 'var(--border)';
+    return;
+  }
+  const s = scoreMap[field](val);
+  sc.textContent = s + '/5';
+  sc.classList.add('visible');
+  bar.style.width = (s / 5 * 100) + '%';
+  bar.style.background = scoreColor(s);
 }
 
-let s1=scoreROE(roe)
-let s2=scorePL(pl)
-let s3=scorePVP(pvp)
-let s4=scorePEG(peg)
-let s5=scoreDY(dy)
-let s6=scoreDivida(divida)
+function calcular() {
+  const ticker = document.getElementById("ticker").value.trim().toUpperCase();
+  const vals = {
+    roe: parseFloat(document.getElementById("roe").value),
+    pl: parseFloat(document.getElementById("pl").value),
+    pvp: parseFloat(document.getElementById("pvp").value),
+    peg: parseFloat(document.getElementById("peg").value),
+    dy: parseFloat(document.getElementById("dy").value),
+    divida: parseFloat(document.getElementById("divida").value)
+  };
 
-let ifv=(s1+s2+s3+s4+s5+s6)/6
+  if (!ticker || Object.values(vals).some(isNaN)) {
+    document.querySelector('.panel-left').classList.add('shake');
+    setTimeout(() => document.querySelector('.panel-left').classList.remove('shake'), 400);
+    toast("⚠ Preencha todos os campos");
+    return;
+  }
 
-let classificacao=classificar(ifv)
+  const scores = {
+    roe: scoreROE(vals.roe),
+    pl: scorePL(vals.pl),
+    pvp: scorePVP(vals.pvp),
+    peg: scorePEG(vals.peg),
+    dy: scoreDY(vals.dy),
+    divida: scoreDivida(vals.divida)
+  };
 
-let index=ranking.findIndex(r=>r.ticker===ticker)
+  const ifv = Object.values(scores).reduce((a, b) => a + b, 0) / 6;
+  const classificacao = classifyIFV(ifv);
+  const entry = { ticker, ifv, classificacao, ...vals, ...{ sroe: scores.roe, spl: scores.pl, spvp: scores.pvp, speg: scores.peg, sdy: scores.dy, sdivida: scores.divida } };
 
-if(index>=0){
+  const idx = ranking.findIndex(r => r.ticker === ticker);
+  if (idx >= 0) { ranking[idx] = entry; toast("✓ " + ticker + " atualizado"); }
+  else { ranking.push(entry); toast("✓ " + ticker + " adicionado ao ranking"); }
 
-ranking[index]={ticker,ifv,classificacao,roe,pl,pvp,peg,dy,divida}
+  save();
 
-}else{
+  // Show result
+  const res = document.getElementById("resultado");
+  res.classList.add('visible');
+  document.getElementById("res-ticker").textContent = ticker;
+  const ifvEl = document.getElementById("res-ifv");
+  ifvEl.textContent = ifv.toFixed(2);
+  ifvEl.style.color = classColor(classificacao);
 
-ranking.push({ticker,ifv,classificacao,roe,pl,pvp,peg,dy,divida})
+  const cl = document.getElementById("res-class");
+  cl.textContent = classificacao.toUpperCase();
+  cl.className = 'result-class ' + classBadgeClass(classificacao);
 
+  document.getElementById("res-gauge").style.width = (ifv / 5 * 100) + '%';
+
+  render();
 }
 
-ranking.sort((a,b)=>b.ifv-a.ifv)
-
-localStorage.setItem("rankingIFV",JSON.stringify(ranking))
-
-document.getElementById("resultado").innerText=
-ticker+" → IFV "+ifv.toFixed(2)+" ("+classificacao+")"
-
-render()
-
+function editar(ticker) {
+  const r = ranking.find(x => x.ticker === ticker);
+  if (!r) return;
+  document.getElementById("ticker").value = r.ticker;
+  document.getElementById("roe").value = r.roe;
+  document.getElementById("pl").value = r.pl;
+  document.getElementById("pvp").value = r.pvp;
+  document.getElementById("peg").value = r.peg;
+  document.getElementById("dy").value = r.dy;
+  document.getElementById("divida").value = r.divida;
+  ['roe','pl','pvp','peg','dy','divida'].forEach(updateScore);
+  document.querySelector('.panel-left').scrollIntoView({ behavior: 'smooth' });
 }
 
-function editar(i){
-
-let r=ranking[i]
-
-document.getElementById("ticker").value=r.ticker
-document.getElementById("roe").value=r.roe
-document.getElementById("pl").value=r.pl
-document.getElementById("pvp").value=r.pvp
-document.getElementById("peg").value=r.peg
-document.getElementById("dy").value=r.dy
-document.getElementById("divida").value=r.divida
-
+function excluir(ticker) {
+  ranking = ranking.filter(r => r.ticker !== ticker);
+  save();
+  render();
+  toast("✕ " + ticker + " removido");
 }
 
-function render(){
-
-let tabela=document.getElementById("ranking")
-
-tabela.innerHTML=`<tr>
-<th>#</th>
-<th>Ticker</th>
-<th>IFV</th>
-<th>Classificação</th>
-<th>Editar</th>
-</tr>`
-
-let lista=ranking
-
-if(filtroAtual!="todas"){
-lista=ranking.filter(r=>r.classificacao==filtroAtual)
+function save() {
+  ranking.sort((a, b) => b.ifv - a.ifv);
+  localStorage.setItem("rankingIFV", JSON.stringify(ranking));
 }
 
-lista.forEach((r,i)=>{
-
-let pos=i+1
-let medalha=""
-
-if(pos==1)medalha="🥇"
-if(pos==2)medalha="🥈"
-if(pos==3)medalha="🥉"
-
-let cor=""
-
-if(r.ifv>=4.5)cor="green"
-if(r.ifv<2)cor="red"
-
-tabela.innerHTML+=`
-
-<tr>
-<td>${pos} ${medalha}</td>
-<td>${r.ticker}</td>
-<td class="${cor}">${r.ifv.toFixed(2)}</td>
-<td>${r.classificacao}</td>
-<td><button onclick="editar(${ranking.indexOf(r)})">Editar</button></td>
-</tr>`
-
-})
-
+function setFilter(f, btn) {
+  filtroAtual = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
 }
 
-render()
+function sortBy(col) {
+  if (sortCol === col) { sortDir = sortDir === 'asc' ? 'desc' : 'asc'; }
+  else { sortCol = col; sortDir = col === 'ifv' ? 'desc' : 'asc'; }
+  document.querySelectorAll('th.sortable').forEach(th => {
+    th.classList.remove('sort-asc', 'sort-desc');
+  });
+  const thEls = document.querySelectorAll('th');
+  thEls.forEach(th => {
+    if ((th.textContent.trim().toLowerCase() === 'ticker' && col === 'ticker') ||
+        (th.textContent.trim().toUpperCase() === 'IFV' && col === 'ifv')) {
+      th.classList.add(sortDir === 'asc' ? 'sort-asc' : 'sort-desc');
+    }
+  });
+  render();
+}
 
+function render() {
+  let lista = [...ranking];
+  if (filtroAtual !== "todas") lista = lista.filter(r => r.classificacao === filtroAtual);
+
+  // Sort
+  lista.sort((a, b) => {
+    const va = a[sortCol], vb = b[sortCol];
+    if (typeof va === 'string') return sortDir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
+    return sortDir === 'asc' ? va - vb : vb - va;
+  });
+
+  // Update stats
+  const total = ranking.length;
+  const extr = ranking.filter(r => r.classificacao === 'extraordinária').length;
+  const avg = total ? ranking.reduce((s, r) => s + r.ifv, 0) / total : 0;
+  const best = total ? Math.max(...ranking.map(r => r.ifv)) : null;
+
+  document.getElementById('st-total').textContent = total;
+  document.getElementById('st-best').textContent = best ? best.toFixed(2) : '—';
+  document.getElementById('st-avg').textContent = total ? avg.toFixed(2) : '—';
+  document.getElementById('st-extr').textContent = extr;
+  document.getElementById('count-badge').textContent = lista.length + ' ativo' + (lista.length !== 1 ? 's' : '');
+
+  const tbody = document.getElementById("tbody");
+  const empty = document.getElementById("empty-state");
+
+  if (lista.length === 0) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  tbody.innerHTML = lista.map((r, i) => {
+    const pos = i + 1;
+    const medal = pos === 1 ? '<span class="medal">🥇</span>' : pos === 2 ? '<span class="medal">🥈</span>' : pos === 3 ? '<span class="medal">🥉</span>' : '';
+    const ifvColor = classColor(r.classificacao);
+    const pct = (r.ifv / 5 * 100).toFixed(0);
+    const badgeClass = classBadgeClass(r.classificacao);
+    const sroe = r.sroe ?? scoreROE(r.roe);
+    const spl = r.spl ?? scorePL(r.pl);
+    const spvp = r.spvp ?? scorePVP(r.pvp);
+    const sdy = r.sdy ?? scoreDY(r.dy);
+
+    return `<tr>
+      <td><div class="rank-num">${medal}<span>${medal ? '' : pos}</span></div></td>
+      <td><div class="ticker-cell">${r.ticker}</div></td>
+      <td>
+        <div class="ifv-cell" style="color:${ifvColor}">${r.ifv.toFixed(2)}</div>
+        <div class="ifv-mini-bar"><div class="ifv-mini-fill" style="width:${pct}%;background:${ifvColor}"></div></div>
+      </td>
+      <td><span class="class-badge ${badgeClass}">${r.classificacao}</span></td>
+      <td>
+        <div class="indicator-pills">
+          <span class="pill" style="color:${scoreColor(sroe)}">ROE ${r.roe}%</span>
+          <span class="pill" style="color:${scoreColor(spl)}">P/L ${r.pl}</span>
+          <span class="pill" style="color:${scoreColor(spvp)}">P/VP ${r.pvp}</span>
+          <span class="pill" style="color:${scoreColor(sdy)}">DY ${r.dy}%</span>
+        </div>
+      </td>
+      <td style="text-align:right">
+        <button class="btn-edit" onclick="editar('${r.ticker}')">Editar</button>
+        <button class="btn-delete" onclick="excluir('${r.ticker}')">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function toast(msg) {
+  const el = document.createElement('div');
+  el.className = 'notif';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2800);
+}
+
+// Init
+render();
 </script>
-
 </body>
-
 </html>
