@@ -1061,9 +1061,17 @@ function render() {
   }
   empty.style.display = 'none';
 
+  // Mapa de medalhas baseado no ranking real por IFV (independente da ordenação atual)
+  const rankingPorIFV = [...ranking].sort((a, b) => b.ifv - a.ifv);
+  const medalMap = {};
+  if (rankingPorIFV[0]) medalMap[rankingPorIFV[0].ticker] = '🥇';
+  if (rankingPorIFV[1]) medalMap[rankingPorIFV[1].ticker] = '🥈';
+  if (rankingPorIFV[2]) medalMap[rankingPorIFV[2].ticker] = '🥉';
+
   tbody.innerHTML = lista.map((r, i) => {
     const pos = i + 1;
-    const medal = pos === 1 ? '<span class="medal">🥇</span>' : pos === 2 ? '<span class="medal">🥈</span>' : pos === 3 ? '<span class="medal">🥉</span>' : '';
+    const medalEmoji = medalMap[r.ticker] || '';
+    const medal = medalEmoji ? `<span class="medal">${medalEmoji}</span>` : '';
     const ifvColor = classColor(r.classificacao);
     const pct = (r.ifv / 5 * 100).toFixed(0);
     const badgeClass = classBadgeClass(r.classificacao);
