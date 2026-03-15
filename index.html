@@ -6,7 +6,6 @@
 <title>IFV Analyzer</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
-
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
@@ -36,97 +35,56 @@
 }
 
 html, body { height: 100%; }
-
-body {
-  font-family: var(--font-display);
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100vh;
-  overflow-x: hidden;
-}
-
+body { font-family: var(--font-display); background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
 body::before {
-  content: '';
-  position: fixed; inset: 0;
+  content: ''; position: fixed; inset: 0;
   background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
-  pointer-events: none;
-  z-index: 1000;
+  pointer-events: none; z-index: 1000;
 }
 
-/* Header */
 header {
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  padding: 0 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 56px;
-  position: sticky; top: 0;
-  z-index: 100;
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  padding: 0 20px; display: flex; align-items: center; justify-content: space-between;
+  height: 56px; position: sticky; top: 0; z-index: 100;
 }
-
 .logo { display: flex; align-items: center; gap: 10px; }
-
 .logo-icon {
-  width: 26px; height: 26px;
-  background: var(--accent);
+  width: 26px; height: 26px; background: var(--accent);
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-  animation: pulse-logo 3s ease-in-out infinite;
-  flex-shrink: 0;
+  animation: pulse-logo 3s ease-in-out infinite; flex-shrink: 0;
 }
 @keyframes pulse-logo { 0%,100%{opacity:1} 50%{opacity:0.65} }
-
 .logo-text { font-size: 17px; font-weight: 800; letter-spacing: -0.02em; }
 .logo-text span { color: var(--accent); }
 
-.header-status {
-  font-family: var(--font-mono); font-size: 10px; color: var(--muted);
-  display: flex; align-items: center; gap: 7px;
-}
-.status-dot {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: var(--green);
-  animation: blink 2s step-end infinite; flex-shrink: 0;
-}
+.header-right { display: flex; align-items: center; gap: 10px; }
+.header-status { font-family: var(--font-mono); font-size: 10px; color: var(--muted); display: flex; align-items: center; gap: 7px; }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: blink 2s step-end infinite; flex-shrink: 0; }
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
 
-/* Mobile tab bar */
-.tab-bar {
-  display: none;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  position: sticky; top: 56px; z-index: 99;
+.btn-io {
+  padding: 5px 11px; border-radius: 6px; font-family: var(--font-mono);
+  font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
+  cursor: pointer; transition: all var(--transition); border: 1px solid var(--border-bright);
+  background: transparent; color: var(--muted); white-space: nowrap;
 }
+.btn-io:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+.btn-io.import { color: var(--green); border-color: rgba(63,185,80,0.3); }
+.btn-io.import:hover { background: var(--green-dim); border-color: var(--green); }
+
+.tab-bar { display: none; background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 56px; z-index: 99; }
 .tab-bar button {
   flex: 1; padding: 12px; border: none; background: transparent;
   color: var(--muted); font-family: var(--font-mono); font-size: 11px;
   font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
-  cursor: pointer; border-bottom: 2px solid transparent;
-  transition: all var(--transition);
+  cursor: pointer; border-bottom: 2px solid transparent; transition: all var(--transition);
 }
 .tab-bar button.active { color: var(--accent); border-bottom-color: var(--accent); }
 
-/* Layout */
-.layout {
-  display: grid;
-  grid-template-columns: 380px 1fr;
-  min-height: calc(100vh - 56px);
-}
+.layout { display: grid; grid-template-columns: 380px 1fr; min-height: calc(100vh - 56px); }
+.panel-left { background: var(--surface); border-right: 1px solid var(--border); padding: 24px 20px; overflow-y: auto; }
+.panel-right { padding: 24px 24px 48px; overflow-y: auto; }
 
-.panel-left {
-  background: var(--surface);
-  border-right: 1px solid var(--border);
-  padding: 24px 20px;
-  overflow-y: auto;
-}
-
-.panel-right {
-  padding: 24px 24px 48px;
-  overflow-y: auto;
-}
-
-/* Section labels */
 .section-label {
   font-family: var(--font-mono); font-size: 10px; font-weight: 700;
   letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent);
@@ -134,7 +92,6 @@ header {
 }
 .section-label::after { content:''; flex:1; height:1px; background:var(--accent-border); }
 
-/* Form */
 .ticker-row { display: flex; gap: 8px; margin-bottom: 18px; }
 .ticker-input-wrap { flex: 1; position: relative; }
 .ticker-prefix {
@@ -142,10 +99,7 @@ header {
   font-family: var(--font-mono); font-size: 12px; color: var(--accent);
   pointer-events: none; font-weight: 700;
 }
-#ticker {
-  padding-left: 28px; text-transform: uppercase; font-weight: 700;
-  letter-spacing: 0.05em; font-family: var(--font-mono);
-}
+#ticker { padding-left: 28px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; font-family: var(--font-mono); }
 
 input {
   width: 100%; padding: 10px 14px; border-radius: var(--radius);
@@ -155,30 +109,27 @@ input {
   -webkit-appearance: none;
 }
 input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
+input.input-warn { border-color: var(--orange) !important; box-shadow: 0 0 0 3px var(--orange-dim) !important; }
+input.input-error { border-color: var(--red) !important; box-shadow: 0 0 0 3px var(--red-dim) !important; }
 input::placeholder { color: var(--muted); font-size: 13px; }
 input[type=number]::-webkit-outer-spin-button,
 input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 input[type=number] { -moz-appearance: textfield; }
 
-/* Indicator grid */
-.indicator-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px;
-}
+.field-hint { font-family: var(--font-mono); font-size: 9px; color: var(--orange); margin-top: 3px; min-height: 13px; letter-spacing: 0.04em; }
+
+.indicator-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
 .indicator-wrap { position: relative; }
 .indicator-label {
   font-size: 10px; font-family: var(--font-mono); color: var(--muted);
   text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px;
   display: flex; align-items: center; justify-content: space-between;
 }
-.indicator-score {
-  font-size: 10px; font-family: var(--font-mono); color: var(--accent);
-  opacity: 0; transition: opacity 0.3s;
-}
+.indicator-score { font-size: 10px; font-family: var(--font-mono); color: var(--accent); opacity: 0; transition: opacity 0.3s; }
 .indicator-score.visible { opacity: 1; }
 .score-bar { height: 2px; background: var(--border); border-radius: 2px; margin-top: 6px; overflow: hidden; }
 .score-fill { height: 100%; border-radius: 2px; width: 0%; transition: width 0.6s cubic-bezier(0.4,0,0.2,1); }
 
-/* Calc button */
 .btn-calc {
   width: 100%; padding: 13px; border: none; border-radius: var(--radius);
   background: var(--accent); color: #000; font-family: var(--font-display);
@@ -189,11 +140,7 @@ input[type=number] { -moz-appearance: textfield; }
 .btn-calc:hover::before { background:rgba(255,255,255,0.15); }
 .btn-calc:active { transform: scale(0.98); }
 
-/* Result box */
-#resultado {
-  margin-top: 16px; padding: 16px; border-radius: var(--radius);
-  border: 1px solid var(--border-bright); background: var(--surface2); display: none;
-}
+#resultado { margin-top: 16px; padding: 16px; border-radius: var(--radius); border: 1px solid var(--border-bright); background: var(--surface2); display: none; }
 #resultado.visible { display: block; animation: slideIn 0.3s ease; }
 @keyframes slideIn { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
 
@@ -201,22 +148,21 @@ input[type=number] { -moz-appearance: textfield; }
 .result-ifv-row { display: flex; align-items: baseline; gap: 8px; margin: 8px 0; }
 .result-ifv-label { font-size: 11px; font-family: var(--font-mono); color: var(--muted); letter-spacing: 0.1em; }
 .result-ifv-value { font-family: var(--font-mono); font-size: 32px; font-weight: 700; line-height: 1; }
-.result-class {
-  display: inline-block; padding: 3px 10px; border-radius: 20px;
-  font-size: 11px; font-family: var(--font-mono); font-weight: 700;
-  text-transform: uppercase; letter-spacing: 0.08em; margin-top: 4px;
-}
+.result-class { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-family: var(--font-mono); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 4px; }
+
 .gauge-wrap { margin-top: 14px; }
 .gauge-track { height: 6px; background: var(--border); border-radius: 6px; overflow: hidden; }
 .gauge-fill { height: 100%; border-radius: 6px; transition: width 0.8s cubic-bezier(0.4,0,0.2,1); background: linear-gradient(90deg, var(--red), var(--yellow), var(--green)); }
 .gauge-labels { display:flex; justify-content:space-between; margin-top:4px; font-size:9px; font-family:var(--font-mono); color:var(--muted); }
 
-/* Right panel */
+/* Radar inline: ocupa a largura do painel menos padding */
+.result-radar { margin-top: 16px; display: flex; justify-content: center; }
+.result-radar canvas { display: block; max-width: 100%; height: auto; }
+
 .ranking-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; flex-wrap:wrap; gap:8px; }
 .ranking-title { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; }
 .count-badge { font-family:var(--font-mono); font-size:12px; background:var(--surface2); border:1px solid var(--border-bright); padding:4px 10px; border-radius:20px; color:var(--muted); }
 
-/* Stats */
 .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:22px; }
 .stat-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:12px 14px; transition:border-color var(--transition); }
 .stat-card:hover { border-color:var(--border-bright); }
@@ -224,41 +170,29 @@ input[type=number] { -moz-appearance: textfield; }
 .stat-value { font-family:var(--font-mono); font-size:20px; font-weight:700; }
 .stat-value.accent { color:var(--accent); }
 
-/* Filters */
 .filters { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:20px; }
-.filter-btn {
-  padding: 6px 13px; border: 1px solid var(--border-bright); border-radius: 20px;
-  background: transparent; color: var(--muted); font-family: var(--font-mono);
-  font-size: 11px; cursor: pointer; transition: all var(--transition);
-  letter-spacing: 0.04em; white-space: nowrap;
-}
+.filter-btn { padding:6px 13px; border:1px solid var(--border-bright); border-radius:20px; background:transparent; color:var(--muted); font-family:var(--font-mono); font-size:11px; cursor:pointer; transition:all var(--transition); letter-spacing:0.04em; white-space:nowrap; }
 .filter-btn:hover { border-color:var(--accent); color:var(--accent); }
 .filter-btn.active { background:var(--accent); border-color:var(--accent); color:#000; font-weight:700; }
 
-/* Table */
 .table-wrap { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
-.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-
-table { width:100%; border-collapse:collapse; min-width:520px; }
+.table-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+table { width:100%; border-collapse:collapse; min-width:540px; }
 thead { background:var(--surface2); border-bottom:1px solid var(--border); }
-th {
-  padding: 10px 14px; text-align: left; font-family: var(--font-mono);
-  font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em;
-  color: var(--muted); font-weight: 400; white-space: nowrap; user-select: none;
-}
-th[data-col] { cursor: pointer; transition: color var(--transition); }
-th[data-col]:hover { color: var(--text); }
-th[data-col]::after { content: ' ↕'; opacity: 0.35; }
-th[data-col].sort-asc::after  { content: ' ↑'; opacity: 1; color: var(--accent); }
-th[data-col].sort-desc::after { content: ' ↓'; opacity: 1; color: var(--accent); }
+th { padding:10px 14px; text-align:left; font-family:var(--font-mono); font-size:10px; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted); font-weight:400; white-space:nowrap; user-select:none; }
+th[data-col] { cursor:pointer; transition:color var(--transition); }
+th[data-col]:hover { color:var(--text); }
+th[data-col]::after { content:' ↕'; opacity:0.35; }
+th[data-col].sort-asc::after  { content:' ↑'; opacity:1; color:var(--accent); }
+th[data-col].sort-desc::after { content:' ↓'; opacity:1; color:var(--accent); }
 
-td { padding: 11px 14px; font-size: 13px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-tr:last-child td { border-bottom: none; }
-tbody tr { transition: background var(--transition); }
-tbody tr:hover { background: var(--surface2); }
+td { padding:11px 14px; font-size:13px; border-bottom:1px solid var(--border); vertical-align:middle; }
+tr:last-child td { border-bottom:none; }
+tbody tr { transition:background var(--transition); }
+tbody tr:hover { background:var(--surface2); }
 
 .rank-num { font-family:var(--font-mono); font-size:11px; color:var(--muted); display:flex; align-items:center; gap:5px; }
-.medal { font-size: 14px; line-height: 1; }
+.medal { font-size:14px; line-height:1; }
 .ticker-cell { font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:0.05em; }
 .ifv-cell { font-family:var(--font-mono); font-size:15px; font-weight:700; }
 .ifv-mini-bar { height:3px; background:var(--border); border-radius:3px; margin-top:4px; overflow:hidden; width:56px; }
@@ -266,23 +200,24 @@ tbody tr:hover { background: var(--surface2); }
 .class-badge { display:inline-flex; align-items:center; padding:3px 9px; border-radius:4px; font-family:var(--font-mono); font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; white-space:nowrap; }
 .indicator-pills { display:flex; gap:4px; flex-wrap:wrap; }
 .pill { font-family:var(--font-mono); font-size:9px; padding:2px 6px; border-radius:3px; background:var(--surface3); color:var(--muted); border:1px solid var(--border); white-space:nowrap; }
+.ts-cell { font-family:var(--font-mono); font-size:10px; color:var(--muted); white-space:nowrap; }
 
-.btn-edit, .btn-delete {
-  padding: 5px 10px; border: 1px solid var(--border-bright); border-radius: 5px;
-  background: transparent; font-family: var(--font-mono); font-size: 11px;
-  cursor: pointer; transition: all var(--transition);
+.btn-radar, .btn-edit, .btn-delete {
+  padding:5px 9px; border:1px solid var(--border-bright); border-radius:5px;
+  background:transparent; font-family:var(--font-mono); font-size:11px;
+  cursor:pointer; transition:all var(--transition);
 }
-.btn-edit { color: var(--accent); }
-.btn-edit:hover { background:var(--accent-dim); border-color:var(--accent); }
-.btn-delete { color:var(--red); margin-left:4px; }
+.btn-radar  { color:var(--accent); margin-right:2px; }
+.btn-radar:hover  { background:var(--accent-dim); border-color:var(--accent); }
+.btn-edit   { color:var(--muted); }
+.btn-edit:hover   { background:var(--surface3); border-color:var(--border-bright); color:var(--text); }
+.btn-delete { color:var(--red); margin-left:2px; }
 .btn-delete:hover { background:var(--red-dim); border-color:var(--red); }
 
-/* Empty state */
 .empty-state { padding:60px 20px; text-align:center; color:var(--muted); }
 .empty-icon { font-size:36px; margin-bottom:10px; opacity:0.5; }
 .empty-state p { font-family:var(--font-mono); font-size:12px; letter-spacing:0.04em; line-height:1.7; }
 
-/* Badge colors */
 .c-green { color:var(--green); }
 .c-accent { color:var(--accent); }
 .badge-extraordinaria { background:rgba(0,229,255,0.1); color:var(--accent); border:1px solid var(--accent-border); }
@@ -291,94 +226,98 @@ tbody tr:hover { background: var(--surface2); }
 .badge-cara           { background:var(--orange-dim); color:var(--orange); border:1px solid rgba(240,136,62,0.3); }
 .badge-muitocara      { background:var(--red-dim); color:var(--red); border:1px solid rgba(248,81,73,0.3); }
 
-/* Modal */
 .modal-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.72);
-  backdrop-filter: blur(4px); z-index: 500;
-  display: flex; align-items: center; justify-content: center; padding: 20px;
-  animation: fadeOverlay 0.2s ease;
+  position:fixed; inset:0; background:rgba(0,0,0,0.75);
+  backdrop-filter:blur(6px); z-index:500;
+  display:flex; align-items:center; justify-content:center; padding:20px;
+  animation:fadeOverlay 0.2s ease;
 }
 @keyframes fadeOverlay { from{opacity:0} to{opacity:1} }
 
 .modal {
-  background: var(--surface2); border: 1px solid var(--border-bright);
-  border-radius: 12px; padding: 28px 24px; max-width: 320px; width: 100%;
-  animation: scaleIn 0.2s ease;
+  background:var(--surface2); border:1px solid var(--border-bright);
+  border-radius:14px; padding:28px 24px; width:100%;
+  animation:scaleIn 0.2s ease;
 }
 @keyframes scaleIn { from{opacity:0;transform:scale(0.93)} to{opacity:1;transform:scale(1)} }
 
-.modal-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+.modal.modal-radar  { max-width: 440px; }
+.modal.modal-delete { max-width: 320px; }
+.modal.modal-import { max-width: 420px; }
+
+.modal-title { font-size:16px; font-weight:700; margin-bottom:6px; }
+.modal-sub { font-family:var(--font-mono); font-size:11px; color:var(--muted); margin-bottom:20px; }
 .modal-body { font-family:var(--font-mono); font-size:12px; color:var(--muted); line-height:1.6; margin-bottom:20px; }
-.modal-ticker { color: var(--text); font-weight: 700; }
-.modal-actions { display:flex; gap:8px; justify-content:flex-end; }
+.modal-ticker { color:var(--text); font-weight:700; }
+.modal-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:20px; }
 
-.btn-confirm-delete {
-  padding: 8px 18px; border: none; border-radius: var(--radius);
-  background: var(--red); color: #fff; font-family: var(--font-mono);
-  font-size: 12px; font-weight: 700; cursor: pointer; transition: opacity var(--transition);
+/* Container do radar no modal: overflow visible para não cortar labels */
+.radar-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+  overflow: visible;
 }
-.btn-confirm-delete:hover { opacity: 0.85; }
+.radar-container canvas { display: block; max-width: 100%; height: auto; }
 
-.btn-cancel {
-  padding: 8px 18px; border: 1px solid var(--border-bright); border-radius: var(--radius);
-  background: transparent; color: var(--muted); font-family: var(--font-mono);
-  font-size: 12px; cursor: pointer; transition: all var(--transition);
+.radar-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:4px; }
+.radar-stat { background:var(--surface3); border-radius:6px; padding:8px 10px; }
+.radar-stat-label { font-family:var(--font-mono); font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:3px; }
+.radar-stat-val { font-family:var(--font-mono); font-size:13px; font-weight:700; }
+
+.import-textarea {
+  width:100%; height:120px; background:var(--surface3); border:1px solid var(--border-bright);
+  border-radius:var(--radius); color:var(--text); font-family:var(--font-mono);
+  font-size:11px; padding:10px 12px; resize:vertical; outline:none;
+  transition:border-color var(--transition);
 }
+.import-textarea:focus { border-color:var(--accent); }
+
+.btn-confirm-delete { padding:8px 18px; border:none; border-radius:var(--radius); background:var(--red); color:#fff; font-family:var(--font-mono); font-size:12px; font-weight:700; cursor:pointer; transition:opacity var(--transition); }
+.btn-confirm-delete:hover { opacity:0.85; }
+.btn-cancel { padding:8px 18px; border:1px solid var(--border-bright); border-radius:var(--radius); background:transparent; color:var(--muted); font-family:var(--font-mono); font-size:12px; cursor:pointer; transition:all var(--transition); }
 .btn-cancel:hover { border-color:var(--text); color:var(--text); }
+.btn-primary { padding:8px 18px; border:none; border-radius:var(--radius); background:var(--accent); color:#000; font-family:var(--font-mono); font-size:12px; font-weight:700; cursor:pointer; transition:opacity var(--transition); }
+.btn-primary:hover { opacity:0.85; }
 
-/* Toast */
-.notif {
-  position: fixed; bottom: 20px; right: 20px;
-  background: var(--surface2); border: 1px solid var(--accent-border);
-  border-left: 3px solid var(--accent); border-radius: var(--radius);
-  padding: 11px 16px; font-family: var(--font-mono); font-size: 12px;
-  color: var(--text); z-index: 600;
-  animation: notifIn 0.25s ease, notifOut 0.25s ease 2.5s forwards;
-  pointer-events: none; max-width: calc(100vw - 40px);
-}
+.notif { position:fixed; bottom:20px; right:20px; background:var(--surface2); border:1px solid var(--accent-border); border-left:3px solid var(--accent); border-radius:var(--radius); padding:11px 16px; font-family:var(--font-mono); font-size:12px; color:var(--text); z-index:600; animation:notifIn 0.25s ease, notifOut 0.25s ease 2.5s forwards; pointer-events:none; max-width:calc(100vw - 40px); }
 @keyframes notifIn  { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
 @keyframes notifOut { from{opacity:1;transform:translateY(0)}    to{opacity:0;transform:translateY(10px)} }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+::-webkit-scrollbar { width:5px; height:5px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border-bright); border-radius:3px; }
+::-webkit-scrollbar-thumb:hover { background:var(--muted); }
 
-/* Shake */
 @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
-.shake { animation: shake 0.35s ease; }
+.shake { animation:shake 0.35s ease; }
 
-/* ── RESPONSIVE ── */
+#importFileInput { display:none; }
+
 @media (max-width: 900px) {
   .layout { grid-template-columns: 1fr; }
-  .panel-left { border-right: none; border-bottom: 1px solid var(--border); }
-  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .panel-left { border-right:none; border-bottom:1px solid var(--border); }
+  .stats-row { grid-template-columns: repeat(2,1fr); }
 }
-
 @media (max-width: 700px) {
-  .tab-bar { display: flex; }
-  .layout { min-height: calc(100vh - 100px); }
-
-  .panel-left  { display: none; }
-  .panel-right { display: none; padding: 16px 12px 60px; }
-  .panel-left.tab-active  { display: block; }
-  .panel-right.tab-active { display: block; }
-
-  .stats-row { gap: 8px; }
-  .stat-value { font-size: 18px; }
-  .filter-btn { font-size: 10px; padding: 5px 10px; }
-
-  th.col-indicators, td.col-indicators { display: none; }
+  .tab-bar { display:flex; }
+  .layout { min-height:calc(100vh - 100px); }
+  .panel-left  { display:none; }
+  .panel-right { display:none; padding:16px 12px 60px; }
+  .panel-left.tab-active  { display:block; }
+  .panel-right.tab-active { display:block; }
+  .stats-row { gap:8px; }
+  .stat-value { font-size:18px; }
+  .filter-btn { font-size:10px; padding:5px 10px; }
+  th.col-indicators, td.col-indicators { display:none; }
+  th.col-ts, td.col-ts { display:none; }
+  .btn-io span { display:none; }
 }
-
 @media (max-width: 420px) {
-  header { padding: 0 14px; }
-  .header-status span { display: none; }
-  .panel-left { padding: 18px 14px; }
-  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  header { padding:0 12px; gap:6px; }
+  .header-status span { display:none; }
+  .panel-left { padding:18px 14px; }
 }
-
 </style>
 </head>
 <body>
@@ -388,20 +327,23 @@ tbody tr:hover { background: var(--surface2); }
     <div class="logo-icon"></div>
     <div class="logo-text">IFV<span>Analyzer</span></div>
   </div>
-  <div class="header-status">
-    <div class="status-dot"></div>
-    <span>SISTEMA ATIVO</span>
+  <div class="header-right">
+    <button class="btn-io import" onclick="openImportModal()">↑ <span>Importar</span></button>
+    <button class="btn-io" onclick="exportarJSON()">↓ <span>Exportar</span></button>
+    <div class="header-status">
+      <div class="status-dot"></div>
+      <span>ATIVO</span>
+    </div>
   </div>
 </header>
 
 <div class="tab-bar" id="tabBar">
-  <button class="active" onclick="switchTab('left', this)">↯ Calcular</button>
-  <button onclick="switchTab('right', this)">📊 Ranking</button>
+  <button class="active" onclick="switchTab('left',this)">↯ Calcular</button>
+  <button onclick="switchTab('right',this)">📊 Ranking</button>
 </div>
 
 <div class="layout">
 
-  <!-- LEFT PANEL -->
   <div class="panel-left tab-active" id="panelLeft">
 
     <div class="section-label">Entrada de Dados</div>
@@ -410,48 +352,48 @@ tbody tr:hover { background: var(--surface2); }
       <div class="ticker-input-wrap">
         <span class="ticker-prefix">$</span>
         <input id="ticker" placeholder="TICKER" autocomplete="off" spellcheck="false"
-               oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')">
+               oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')"
+               onpaste="handleTickerPaste(event)">
       </div>
     </div>
 
     <div class="indicator-grid">
-
       <div class="indicator-wrap">
         <div class="indicator-label">ROE (%) <span class="indicator-score" id="sc-roe">—</span></div>
         <input id="roe" placeholder="Ex: 15.0" type="number" step="any" oninput="updateScore('roe')">
         <div class="score-bar"><div class="score-fill" id="bar-roe"></div></div>
+        <div class="field-hint" id="hint-roe"></div>
       </div>
-
       <div class="indicator-wrap">
         <div class="indicator-label">P/L <span class="indicator-score" id="sc-pl">—</span></div>
         <input id="pl" placeholder="Ex: 12.0" type="number" step="any" oninput="updateScore('pl')">
         <div class="score-bar"><div class="score-fill" id="bar-pl"></div></div>
+        <div class="field-hint" id="hint-pl"></div>
       </div>
-
       <div class="indicator-wrap">
         <div class="indicator-label">P/VP <span class="indicator-score" id="sc-pvp">—</span></div>
         <input id="pvp" placeholder="Ex: 1.5" type="number" step="any" oninput="updateScore('pvp')">
         <div class="score-bar"><div class="score-fill" id="bar-pvp"></div></div>
+        <div class="field-hint" id="hint-pvp"></div>
       </div>
-
       <div class="indicator-wrap">
         <div class="indicator-label">PEG <span class="indicator-score" id="sc-peg">—</span></div>
         <input id="peg" placeholder="Ex: 1.0" type="number" step="any" oninput="updateScore('peg')">
         <div class="score-bar"><div class="score-fill" id="bar-peg"></div></div>
+        <div class="field-hint" id="hint-peg"></div>
       </div>
-
       <div class="indicator-wrap">
         <div class="indicator-label">DY (%) <span class="indicator-score" id="sc-dy">—</span></div>
         <input id="dy" placeholder="Ex: 6.5" type="number" step="any" oninput="updateScore('dy')">
         <div class="score-bar"><div class="score-fill" id="bar-dy"></div></div>
+        <div class="field-hint" id="hint-dy"></div>
       </div>
-
       <div class="indicator-wrap">
         <div class="indicator-label">Dívi/EBIT <span class="indicator-score" id="sc-divida">—</span></div>
         <input id="divida" placeholder="Ex: 1.5" type="number" step="any" oninput="updateScore('divida')">
         <div class="score-bar"><div class="score-fill" id="bar-divida"></div></div>
+        <div class="field-hint" id="hint-divida"></div>
       </div>
-
     </div>
 
     <button class="btn-calc" onclick="calcular()">↯ Calcular IFV</button>
@@ -466,15 +408,14 @@ tbody tr:hover { background: var(--surface2); }
       <div class="result-class" id="res-class"></div>
       <div class="gauge-wrap">
         <div class="gauge-track"><div class="gauge-fill" id="res-gauge"></div></div>
-        <div class="gauge-labels">
-          <span>Muito Cara</span><span>Razoável</span><span>Extraordinária</span>
-        </div>
+        <div class="gauge-labels"><span>Muito Cara</span><span>Razoável</span><span>Extraordinária</span></div>
       </div>
+      <!-- canvas criado dinamicamente em showResult() -->
+      <div class="result-radar" id="resultRadarWrap"></div>
     </div>
 
   </div>
 
-  <!-- RIGHT PANEL -->
   <div class="panel-right" id="panelRight">
 
     <div class="ranking-header">
@@ -483,33 +424,21 @@ tbody tr:hover { background: var(--surface2); }
     </div>
 
     <div class="stats-row">
-      <div class="stat-card">
-        <div class="stat-label">Total</div>
-        <div class="stat-value accent" id="st-total">0</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Melhor IFV</div>
-        <div class="stat-value" id="st-best">—</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Média IFV</div>
-        <div class="stat-value" id="st-avg">—</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Extraordinárias</div>
-        <div class="stat-value c-accent" id="st-extr">0</div>
-      </div>
+      <div class="stat-card"><div class="stat-label">Total</div><div class="stat-value accent" id="st-total">0</div></div>
+      <div class="stat-card"><div class="stat-label">Melhor IFV</div><div class="stat-value" id="st-best">—</div></div>
+      <div class="stat-card"><div class="stat-label">Média IFV</div><div class="stat-value" id="st-avg">—</div></div>
+      <div class="stat-card"><div class="stat-label">Extraordinárias</div><div class="stat-value c-accent" id="st-extr">0</div></div>
     </div>
 
     <div class="section-label" style="margin-bottom:14px">Filtrar</div>
 
     <div class="filters">
-      <button class="filter-btn active" onclick="setFilter('todas', this)">Todas</button>
-      <button class="filter-btn" onclick="setFilter('extraordinária', this)">Extraordinária</button>
-      <button class="filter-btn" onclick="setFilter('muito boa', this)">Muito Boa</button>
-      <button class="filter-btn" onclick="setFilter('razoável', this)">Razoável</button>
-      <button class="filter-btn" onclick="setFilter('cara', this)">Cara</button>
-      <button class="filter-btn" onclick="setFilter('muito cara', this)">Muito Cara</button>
+      <button class="filter-btn active" onclick="setFilter('todas',this)">Todas</button>
+      <button class="filter-btn" onclick="setFilter('extraordinária',this)">Extraordinária</button>
+      <button class="filter-btn" onclick="setFilter('muito boa',this)">Muito Boa</button>
+      <button class="filter-btn" onclick="setFilter('razoável',this)">Razoável</button>
+      <button class="filter-btn" onclick="setFilter('cara',this)">Cara</button>
+      <button class="filter-btn" onclick="setFilter('muito cara',this)">Muito Cara</button>
     </div>
 
     <div class="table-wrap">
@@ -517,11 +446,12 @@ tbody tr:hover { background: var(--surface2); }
         <table>
           <thead>
             <tr>
-              <th style="width:44px">#</th>
+              <th style="width:40px">#</th>
               <th data-col="ticker">Ticker</th>
               <th data-col="ifv" class="sort-desc">IFV</th>
               <th>Classificação</th>
               <th class="col-indicators">Indicadores</th>
+              <th class="col-ts" data-col="updatedAt">Atualizado</th>
               <th style="text-align:right">Ações</th>
             </tr>
           </thead>
@@ -537,20 +467,47 @@ tbody tr:hover { background: var(--surface2); }
   </div>
 </div>
 
-<!-- Delete confirm modal -->
-<div class="modal-overlay" id="modalOverlay" style="display:none" onclick="closeModal(event)">
-  <div class="modal">
-    <div class="modal-title">Remover ativo</div>
-    <div class="modal-body">
-      Deseja remover <span class="modal-ticker" id="modalTicker"></span> do ranking?
-      Esta ação não pode ser desfeita.
+<!-- Radar Modal -->
+<div class="modal-overlay" id="radarModal" style="display:none" onclick="closeRadarModal(event)">
+  <div class="modal modal-radar">
+    <div class="modal-title" id="radarModalTitle">Radar</div>
+    <div class="modal-sub" id="radarModalSub"></div>
+    <!-- canvas inserido dinamicamente -->
+    <div class="radar-container" id="radarContainer"></div>
+    <div class="radar-stats" id="radarStats"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="document.getElementById('radarModal').style.display='none'">Fechar</button>
     </div>
+  </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal-overlay" id="modalOverlay" style="display:none" onclick="closeModal(event)">
+  <div class="modal modal-delete">
+    <div class="modal-title">Remover ativo</div>
+    <div class="modal-body">Deseja remover <span class="modal-ticker" id="modalTicker"></span> do ranking? Esta ação não pode ser desfeita.</div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
       <button class="btn-confirm-delete" id="btnConfirmDelete">Remover</button>
     </div>
   </div>
 </div>
+
+<!-- Import Modal -->
+<div class="modal-overlay" id="importModal" style="display:none" onclick="closeImportModal(event)">
+  <div class="modal modal-import">
+    <div class="modal-title">Importar JSON</div>
+    <div class="modal-sub">Cole o conteúdo do arquivo exportado ou selecione o arquivo</div>
+    <textarea class="import-textarea" id="importTextarea" placeholder='[{"ticker":"PETR4","ifv":3.83,...}]'></textarea>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeImportModal()" style="margin-right:auto">Cancelar</button>
+      <button class="btn-io import" onclick="document.getElementById('importFileInput').click()">Arquivo</button>
+      <button class="btn-primary" onclick="confirmarImport()">Importar</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="importFileInput" accept=".json">
 
 <script>
 // ── State ──
@@ -564,19 +521,12 @@ function loadRanking() {
   try {
     const raw = localStorage.getItem("rankingIFV");
     if (raw) ranking = JSON.parse(raw);
-  } catch (e) {
-    ranking = [];
-    toast("⚠ Erro ao carregar dados salvos");
-  }
+  } catch(e) { ranking = []; toast("⚠ Erro ao carregar dados salvos"); }
 }
-
 function saveRanking() {
   ranking.sort((a, b) => b.ifv - a.ifv);
-  try {
-    localStorage.setItem("rankingIFV", JSON.stringify(ranking));
-  } catch (e) {
-    toast("⚠ Não foi possível salvar — armazenamento indisponível");
-  }
+  try { localStorage.setItem("rankingIFV", JSON.stringify(ranking)); }
+  catch(e) { toast("⚠ Não foi possível salvar — armazenamento indisponível"); }
 }
 
 // ── Score fns ──
@@ -587,35 +537,61 @@ const scorePEG    = v => v>2?1:v>1.5?2:v>1?3:v>0.5?4:5;
 const scoreDY     = v => v<2?1:v<4?2:v<6?3:v<10?4:5;
 const scoreDivida = v => v>4?1:v>3?2:v>2?3:v>1?4:5;
 
-const scoreMap = { roe: scoreROE, pl: scorePL, pvp: scorePVP, peg: scorePEG, dy: scoreDY, divida: scoreDivida };
+const scoreMap = { roe:scoreROE, pl:scorePL, pvp:scorePVP, peg:scorePEG, dy:scoreDY, divida:scoreDivida };
 const fields   = ['roe','pl','pvp','peg','dy','divida'];
 
-const scoreColor = s => s<=1?'var(--red)':s<=2?'var(--orange)':s<=3?'var(--yellow)':s<=4?'var(--green)':'var(--accent)';
+const scoreColor = s => s<=1?'#f85149':s<=2?'#f0883e':s<=3?'#d29922':s<=4?'#3fb950':'#00e5ff';
 
 const classifyIFV = ifv =>
-  ifv >= 4.5 ? "extraordinária" :
-  ifv >= 3.5 ? "muito boa"      :
-  ifv >= 2.5 ? "razoável"       :
-  ifv >= 1.5 ? "cara"           : "muito cara";
+  ifv>=4.5?"extraordinária":ifv>=3.5?"muito boa":ifv>=2.5?"razoável":ifv>=1.5?"cara":"muito cara";
 
-// Normalize class name for CSS (remove accents + spaces)
 function classBadgeClass(c) {
   return 'badge-' + c.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s/g,'').toLowerCase();
 }
-
 function classColor(c) {
-  if (c === "extraordinária") return 'var(--accent)';
-  if (c === "muito boa")      return 'var(--green)';
-  if (c === "razoável")       return 'var(--yellow)';
-  if (c === "cara")           return 'var(--orange)';
-  return 'var(--red)';
+  if(c==="extraordinária") return '#00e5ff';
+  if(c==="muito boa")      return '#3fb950';
+  if(c==="razoável")       return '#d29922';
+  if(c==="cara")           return '#f0883e';
+  return '#f85149';
 }
 
-// ── Live score bars ──
+// ── Range validation ──
+const rangeConfig = {
+  roe:    { min: -100, max: 200,  hint: v => v < 0 ? 'ROE negativo — prejuízo' : v > 60 ? 'Valor atipicamente alto' : '' },
+  pl:     { min: -500, max: 1000, hint: v => v < 0 ? 'P/L negativo — prejuízo' : v > 100 ? 'P/L muito elevado' : '' },
+  pvp:    { min: -50,  max: 50,   hint: v => v < 0 ? 'P/VP negativo — incomum' : v > 10 ? 'P/VP muito elevado' : '' },
+  peg:    { min: -50,  max: 100,  hint: v => v < 0 ? 'PEG negativo — crescimento negativo' : v > 5 ? 'PEG muito alto' : '' },
+  dy:     { min: 0,    max: 100,  hint: v => v > 25 ? 'DY muito elevado — verifique' : '' },
+  divida: { min: -10,  max: 50,   hint: v => v < 0 ? 'Dívida negativa (caixa líquido)' : v > 6 ? 'Alavancagem alta' : '' },
+};
+
+function validateField(field, val) {
+  const cfg  = rangeConfig[field];
+  const el   = document.getElementById(field);
+  const hint = document.getElementById('hint-' + field);
+  el.classList.remove('input-warn','input-error');
+  hint.textContent = '';
+  if (isNaN(val)) return;
+  if (val < cfg.min || val > cfg.max) {
+    el.classList.add('input-error');
+    hint.textContent = `Fora do range (${cfg.min} a ${cfg.max})`;
+    hint.style.color = 'var(--red)';
+    return;
+  }
+  const msg = cfg.hint(val);
+  if (msg) {
+    el.classList.add('input-warn');
+    hint.textContent = msg;
+    hint.style.color = 'var(--orange)';
+  }
+}
+
 function updateScore(field) {
   const val = parseFloat(document.getElementById(field).value);
   const sc  = document.getElementById('sc-' + field);
   const bar = document.getElementById('bar-' + field);
+  validateField(field, val);
   if (isNaN(val)) {
     sc.textContent = '—'; sc.classList.remove('visible');
     bar.style.width = '0%'; bar.style.background = 'var(--border)';
@@ -623,85 +599,116 @@ function updateScore(field) {
   }
   const s = scoreMap[field](val);
   sc.textContent = s + '/5'; sc.classList.add('visible');
-  bar.style.width = (s / 5 * 100) + '%';
+  bar.style.width = (s/5*100) + '%';
   bar.style.background = scoreColor(s);
+}
+
+function handleTickerPaste(e) {
+  e.preventDefault();
+  const pasted = (e.clipboardData || window.clipboardData).getData('text');
+  document.getElementById('ticker').value = pasted.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10);
 }
 
 // ── Calcular ──
 function calcular() {
   const ticker = document.getElementById("ticker").value.trim().toUpperCase();
-
-  if (!ticker) {
-    document.getElementById('ticker').focus();
-    shake(); toast("⚠ Informe o ticker do ativo"); return;
-  }
+  if (!ticker) { document.getElementById('ticker').focus(); shake(); toast("⚠ Informe o ticker do ativo"); return; }
 
   const vals = {};
   for (const f of fields) vals[f] = parseFloat(document.getElementById(f).value);
+  if (fields.some(f => isNaN(vals[f]))) { shake(); toast("⚠ Preencha todos os indicadores"); return; }
 
-  if (fields.some(f => isNaN(vals[f]))) {
-    shake(); toast("⚠ Preencha todos os indicadores"); return;
-  }
+  const outOfRange = fields.filter(f => {
+    const cfg = rangeConfig[f];
+    return vals[f] < cfg.min || vals[f] > cfg.max;
+  });
+  if (outOfRange.length) { shake(); toast("⚠ Corrija os valores fora do range"); return; }
 
-  // Use scoreMap consistently — no duplication
   const scores = {};
   for (const f of fields) scores[f] = scoreMap[f](vals[f]);
-
   const ifv = fields.reduce((acc, f) => acc + scores[f], 0) / fields.length;
   const classificacao = classifyIFV(ifv);
+  const now = new Date().toISOString();
 
   const entry = {
     ticker, ifv, classificacao, ...vals,
-    sroe: scores.roe, spl: scores.pl, spvp: scores.pvp,
-    speg: scores.peg, sdy: scores.dy, sdivida: scores.divida
+    sroe:scores.roe, spl:scores.pl, spvp:scores.pvp, speg:scores.peg, sdy:scores.dy, sdivida:scores.divida,
+    updatedAt: now,
   };
 
   const idx = ranking.findIndex(r => r.ticker === ticker);
-  if (idx >= 0) { ranking[idx] = entry; toast("✓ " + ticker + " atualizado"); }
-  else          { ranking.push(entry);  toast("✓ " + ticker + " adicionado"); }
+  if (idx >= 0) {
+    entry.createdAt = ranking[idx].createdAt || now;
+    ranking[idx] = entry;
+    toast("✓ " + ticker + " atualizado");
+  } else {
+    entry.createdAt = now;
+    ranking.push(entry);
+    toast("✓ " + ticker + " adicionado");
+  }
 
   saveRanking();
-  showResult(ticker, ifv, classificacao);
+  showResult(entry);
   render();
 }
 
-function showResult(ticker, ifv, classificacao) {
-  const res = document.getElementById("resultado");
-  res.classList.add('visible');
-  document.getElementById("res-ticker").textContent = ticker;
-  const ifvEl = document.getElementById("res-ifv");
-  ifvEl.textContent = ifv.toFixed(2);
-  ifvEl.style.color = classColor(classificacao);
-  const cl = document.getElementById("res-class");
-  cl.textContent = classificacao.toUpperCase();
-  cl.className = 'result-class ' + classBadgeClass(classificacao);
-  document.getElementById("res-gauge").style.width = (ifv / 5 * 100) + '%';
+// ── Cria canvas com dimensão correta para cada contexto ──
+// totalSize: tamanho total do canvas em px
+// polygonRadius: raio do polígono (deve ser totalSize/2 - LABEL_MARGIN)
+// LABEL_MARGIN garante que nenhum label seja cortado
+function makeRadarCanvas(totalSize, polygonRadius) {
+  const cvs = document.createElement('canvas');
+  cvs.width  = totalSize;
+  cvs.height = totalSize;
+  return { cvs, polygonRadius };
 }
 
-// ── Editar — restaura resultado, não o apaga ──
+function showResult(r) {
+  const res = document.getElementById("resultado");
+  res.classList.add('visible');
+  document.getElementById("res-ticker").textContent = r.ticker;
+  const ifvEl = document.getElementById("res-ifv");
+  ifvEl.textContent = r.ifv.toFixed(2);
+  ifvEl.style.color = classColor(r.classificacao);
+  const cl = document.getElementById("res-class");
+  cl.textContent = r.classificacao.toUpperCase();
+  cl.className = 'result-class ' + classBadgeClass(r.classificacao);
+  document.getElementById("res-gauge").style.width = (r.ifv/5*100) + '%';
+
+  const scores = [
+    r.sroe ?? scoreROE(r.roe),   r.spl  ?? scorePL(r.pl),
+    r.spvp ?? scorePVP(r.pvp),   r.speg ?? scorePEG(r.peg),
+    r.sdy  ?? scoreDY(r.dy),     r.sdivida ?? scoreDivida(r.divida)
+  ];
+
+  const wrap = document.getElementById('resultRadarWrap');
+  wrap.innerHTML = '';
+  // 260px canvas, 78px de raio → 52px de margem para labels em cada lado
+  const cvs = document.createElement('canvas');
+  cvs.width = cvs.height = 260;
+  wrap.appendChild(cvs);
+  drawRadar(cvs, scores, classColor(r.classificacao), 78);
+}
+
+// ── Editar ──
 function editar(ticker) {
   const r = ranking.find(x => x.ticker === ticker);
   if (!r) return;
   document.getElementById("ticker").value = r.ticker;
-  for (const f of fields) document.getElementById(f).value = r[f];
-  fields.forEach(updateScore);
-  showResult(r.ticker, r.ifv, r.classificacao); // Keep result visible
-  if (window.innerWidth <= 700) {
-    switchTab('left', document.querySelector('.tab-bar button'));
-  } else {
-    document.getElementById('panelLeft').scrollIntoView({ behavior: 'smooth' });
-  }
+  for (const f of fields) { document.getElementById(f).value = r[f]; }
+  fields.forEach(f => { validateField(f, r[f]); updateScore(f); });
+  showResult(r);
+  if (window.innerWidth <= 700) switchTab('left', document.querySelector('.tab-bar button'));
+  else document.getElementById('panelLeft').scrollIntoView({behavior:'smooth'});
 }
 
-// ── Excluir com confirmação ──
+// ── Delete ──
 let pendingDeleteTicker = null;
-
 function excluir(ticker) {
   pendingDeleteTicker = ticker;
   document.getElementById('modalTicker').textContent = ticker;
   document.getElementById('modalOverlay').style.display = 'flex';
 }
-
 document.getElementById('btnConfirmDelete').addEventListener('click', () => {
   if (!pendingDeleteTicker) return;
   const t = pendingDeleteTicker;
@@ -711,18 +718,245 @@ document.getElementById('btnConfirmDelete').addEventListener('click', () => {
   pendingDeleteTicker = null;
   document.getElementById('modalOverlay').style.display = 'none';
 });
-
 function closeModal(e) {
   if (e && e.target !== document.getElementById('modalOverlay')) return;
   pendingDeleteTicker = null;
   document.getElementById('modalOverlay').style.display = 'none';
 }
 
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeModal();
-  if (e.key === 'Enter' && document.getElementById('modalOverlay').style.display === 'flex')
-    document.getElementById('btnConfirmDelete').click();
+// ── Radar Modal ──
+function abrirRadar(ticker) {
+  const r = ranking.find(x => x.ticker === ticker);
+  if (!r) return;
+  document.getElementById('radarModalTitle').textContent = r.ticker + ' — Radar';
+  document.getElementById('radarModalSub').textContent   = 'IFV ' + r.ifv.toFixed(2) + ' · ' + r.classificacao;
+
+  const scores = [
+    r.sroe ?? scoreROE(r.roe),   r.spl  ?? scorePL(r.pl),
+    r.spvp ?? scorePVP(r.pvp),   r.speg ?? scorePEG(r.peg),
+    r.sdy  ?? scoreDY(r.dy),     r.sdivida ?? scoreDivida(r.divida)
+  ];
+
+  const container = document.getElementById('radarContainer');
+  container.innerHTML = '';
+  // 340px canvas, 104px de raio → 66px de margem para labels em cada lado
+  const cvs = document.createElement('canvas');
+  cvs.width = cvs.height = 340;
+  container.appendChild(cvs);
+  drawRadar(cvs, scores, classColor(r.classificacao), 104);
+
+  const labels  = ['ROE','P/L','P/VP','PEG','DY','Dívi/EBIT'];
+  const rawVals = [r.roe, r.pl, r.pvp, r.peg, r.dy, r.divida];
+  const units   = ['%','×','×','×','%','×'];
+  document.getElementById('radarStats').innerHTML = labels.map((l, i) =>
+    `<div class="radar-stat">
+      <div class="radar-stat-label">${l}</div>
+      <div class="radar-stat-val" style="color:${scoreColor(scores[i])}">${rawVals[i]}${units[i]} <span style="font-size:10px;opacity:0.6">(${scores[i]}/5)</span></div>
+    </div>`
+  ).join('');
+
+  document.getElementById('radarModal').style.display = 'flex';
+}
+function closeRadarModal(e) {
+  if (e && e.target !== document.getElementById('radarModal')) return;
+  document.getElementById('radarModal').style.display = 'none';
+}
+
+// ── drawRadar ──
+// canvas   : elemento <canvas> já dimensionado (quadrado)
+// scores   : array[6] com valores 1-5
+// color    : cor hex do ativo
+// polyR    : raio do polígono de dados em px
+//            A margem para labels = (canvas.width/2 - polyR), deve ser >= 30px
+function drawRadar(canvas, scores, color, polyR) {
+  const ctx = canvas.getContext('2d');
+  const S   = canvas.width;          // side (canvas é quadrado)
+  const cx  = S / 2;
+  const cy  = S / 2;
+  const N   = 6;
+  const LABELS = ['ROE', 'P/L', 'P/VP', 'PEG', 'DY', 'Dívida'];
+
+  ctx.clearRect(0, 0, S, S);
+
+  const ao    = -Math.PI / 2;
+  const angle = i => (i / N) * Math.PI * 2 + ao;
+
+  // Anéis de referência
+  for (let ring = 1; ring <= 5; ring++) {
+    const r = (ring / 5) * polyR;
+    ctx.beginPath();
+    for (let i = 0; i <= N; i++) {
+      const a = angle(i);
+      i === 0
+        ? ctx.moveTo(cx + r * Math.cos(a), cy + r * Math.sin(a))
+        : ctx.lineTo(cx + r * Math.cos(a), cy + r * Math.sin(a));
+    }
+    ctx.closePath();
+    ctx.strokeStyle = ring === 5 ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.06)';
+    ctx.lineWidth   = 1;
+    ctx.stroke();
+  }
+
+  // Raios
+  for (let i = 0; i < N; i++) {
+    const a = angle(i);
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + polyR * Math.cos(a), cy + polyR * Math.sin(a));
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    ctx.lineWidth   = 1;
+    ctx.stroke();
+  }
+
+  // Polígono de dados
+  ctx.beginPath();
+  for (let i = 0; i < N; i++) {
+    const r = (scores[i] / 5) * polyR;
+    const a = angle(i);
+    i === 0
+      ? ctx.moveTo(cx + r * Math.cos(a), cy + r * Math.sin(a))
+      : ctx.lineTo(cx + r * Math.cos(a), cy + r * Math.sin(a));
+  }
+  ctx.closePath();
+  const h2r = (hex, alpha) => {
+    const rv = parseInt(hex.slice(1,3),16), gv = parseInt(hex.slice(3,5),16), bv = parseInt(hex.slice(5,7),16);
+    return `rgba(${rv},${gv},${bv},${alpha})`;
+  };
+  ctx.fillStyle   = h2r(color, 0.18);
+  ctx.strokeStyle = color;
+  ctx.lineWidth   = 2;
+  ctx.fill();
+  ctx.stroke();
+
+  // Pontos nos vértices
+  for (let i = 0; i < N; i++) {
+    const r = (scores[i] / 5) * polyR;
+    const a = angle(i);
+    ctx.beginPath();
+    ctx.arc(cx + r * Math.cos(a), cy + r * Math.sin(a), 3.5, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+  }
+
+  // Labels
+  // Margem disponível fora do polígono = cx - polyR
+  // Posicionamos o texto a 60% da margem disponível além do polígono
+  const margin      = cx - polyR;
+  const labelR      = polyR + margin * 0.62;
+  const fontSize    = Math.max(9, Math.min(11, Math.floor(margin * 0.36)));
+
+  ctx.font         = `bold ${fontSize}px 'Space Mono', monospace`;
+  ctx.fillStyle    = 'rgba(255,255,255,0.62)';
+  ctx.textBaseline = 'middle';
+
+  for (let i = 0; i < N; i++) {
+    const a  = angle(i);
+    const lx = cx + labelR * Math.cos(a);
+    const ly = cy + labelR * Math.sin(a);
+
+    // Alinha pelo ângulo: texto à esquerda do ponto quando o eixo aponta à esquerda
+    const cosA = Math.cos(a);
+    if      (cosA >  0.1) ctx.textAlign = 'left';
+    else if (cosA < -0.1) ctx.textAlign = 'right';
+    else                  ctx.textAlign = 'center';
+
+    ctx.fillText(LABELS[i], lx, ly);
+  }
+}
+
+// ── Export (robusto) ──
+function exportarJSON() {
+  if (!ranking.length) { toast("⚠ Nenhum ativo para exportar"); return; }
+
+  const json = JSON.stringify(ranking, null, 2);
+  const nome = 'ifv-ranking-' + new Date().toISOString().slice(0, 10) + '.json';
+
+  try {
+    const blob = new Blob([json], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = nome;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    toast("↓ Exportado com sucesso");
+    return;
+  } catch(e) {}
+
+  try {
+    const uri = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
+    const a   = document.createElement('a');
+    a.href = uri; a.download = nome;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    toast("↓ Exportado com sucesso");
+    return;
+  } catch(e) {}
+
+  const w = window.open('', '_blank');
+  if (w) {
+    w.document.write('<pre>' + json.replace(/</g, '&lt;') + '</pre>');
+    toast("↓ JSON aberto em nova aba — salve com Ctrl+S");
+  } else {
+    toast("⚠ Permita popups e tente novamente");
+  }
+}
+
+// ── Import ──
+function openImportModal() {
+  document.getElementById('importTextarea').value = '';
+  document.getElementById('importModal').style.display = 'flex';
+}
+function closeImportModal(e) {
+  if (e && e.target !== document.getElementById('importModal')) return;
+  document.getElementById('importModal').style.display = 'none';
+}
+
+document.getElementById('importFileInput').addEventListener('change', function() {
+  const file = this.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => { document.getElementById('importTextarea').value = e.target.result; };
+  reader.readAsText(file);
+  this.value = '';
 });
+
+function confirmarImport() {
+  const raw = document.getElementById('importTextarea').value.trim();
+  if (!raw) { toast("⚠ Nenhum conteúdo para importar"); return; }
+  let data;
+  try { data = JSON.parse(raw); }
+  catch(e) { toast("⚠ JSON inválido — verifique o arquivo"); return; }
+  if (!Array.isArray(data) || !data.length) { toast("⚠ Arquivo vazio ou formato inválido"); return; }
+
+  const valid = data.filter(r =>
+    typeof r.ticker === 'string' &&
+    typeof r.ifv === 'number' &&
+    fields.every(f => typeof r[f] === 'number')
+  );
+  if (!valid.length) { toast("⚠ Nenhum item válido encontrado"); return; }
+
+  let added = 0, updated = 0;
+  for (const r of valid) {
+    const scores = {};
+    for (const f of fields) scores[f] = scoreMap[f](r[f]);
+    const ifv = fields.reduce((acc,f) => acc + scores[f], 0) / fields.length;
+    const entry = { ...r, ifv, classificacao: classifyIFV(ifv),
+      sroe:scores.roe, spl:scores.pl, spvp:scores.pvp, speg:scores.peg, sdy:scores.dy, sdivida:scores.divida,
+      updatedAt: r.updatedAt || new Date().toISOString(),
+      createdAt: r.createdAt || new Date().toISOString(),
+    };
+    const idx = ranking.findIndex(x => x.ticker === entry.ticker);
+    if (idx >= 0) { ranking[idx] = entry; updated++; }
+    else { ranking.push(entry); added++; }
+  }
+
+  saveRanking(); render();
+  toast(`✓ Importado: ${added} adicionado${added!==1?'s':''}, ${updated} atualizado${updated!==1?'s':''}`);
+  document.getElementById('importModal').style.display = 'none';
+}
 
 // ── Filter ──
 function setFilter(f, btn) {
@@ -732,7 +966,7 @@ function setFilter(f, btn) {
   render();
 }
 
-// ── Sort — uses data-col attribute, not textContent ──
+// ── Sort ──
 document.querySelectorAll('th[data-col]').forEach(th => {
   th.addEventListener('click', () => {
     const col = th.dataset.col;
@@ -740,11 +974,19 @@ document.querySelectorAll('th[data-col]').forEach(th => {
     else { sortCol = col; sortDir = col === 'ifv' ? 'desc' : 'asc'; }
     document.querySelectorAll('th[data-col]').forEach(t => {
       t.classList.remove('sort-asc','sort-desc');
-      if (t.dataset.col === col) t.classList.add(sortDir === 'asc' ? 'sort-asc' : 'sort-desc');
+      if (t.dataset.col === col) t.classList.add(sortDir==='asc'?'sort-asc':'sort-desc');
     });
     render();
   });
 });
+
+// ── Timestamp ──
+function fmtDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'2-digit'}) +
+    ' ' + d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+}
 
 // ── Render ──
 function render() {
@@ -752,41 +994,40 @@ function render() {
   if (filtroAtual !== "todas") lista = lista.filter(r => r.classificacao === filtroAtual);
 
   lista.sort((a, b) => {
-    const va = a[sortCol], vb = b[sortCol];
-    if (typeof va === 'string') return sortDir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
-    return sortDir === 'asc' ? va - vb : vb - va;
+    let va = a[sortCol], vb = b[sortCol];
+    if (sortCol === 'updatedAt') { va = va||''; vb = vb||''; }
+    if (typeof va === 'string') return sortDir==='asc' ? va.localeCompare(vb) : vb.localeCompare(va);
+    return sortDir==='asc' ? va-vb : vb-va;
   });
 
   const total = ranking.length;
-  const extr  = ranking.filter(r => r.classificacao === 'extraordinária').length;
-  const avg   = total ? ranking.reduce((s, r) => s + r.ifv, 0) / total : 0;
+  const extr  = ranking.filter(r => r.classificacao==='extraordinária').length;
+  const avg   = total ? ranking.reduce((s,r) => s+r.ifv, 0)/total : 0;
   const best  = total ? Math.max(...ranking.map(r => r.ifv)) : null;
 
   document.getElementById('st-total').textContent = total;
-  document.getElementById('st-best').textContent  = best !== null ? best.toFixed(2) : '—';
+  document.getElementById('st-best').textContent  = best!==null ? best.toFixed(2) : '—';
   document.getElementById('st-avg').textContent   = total ? avg.toFixed(2) : '—';
   document.getElementById('st-extr').textContent  = extr;
-  document.getElementById('count-badge').textContent = lista.length + ' ativo' + (lista.length !== 1 ? 's' : '');
+  document.getElementById('count-badge').textContent = lista.length + ' ativo' + (lista.length!==1?'s':'');
 
   const tbody = document.getElementById("tbody");
   const empty = document.getElementById("empty-state");
-
-  if (lista.length === 0) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+  if (!lista.length) { tbody.innerHTML=''; empty.style.display='block'; return; }
   empty.style.display = 'none';
 
-  // Medals always follow real IFV rank
-  const byIFV = [...ranking].sort((a, b) => b.ifv - a.ifv);
+  const byIFV    = [...ranking].sort((a,b) => b.ifv-a.ifv);
   const medalMap = {};
   if (byIFV[0]) medalMap[byIFV[0].ticker] = '🥇';
   if (byIFV[1]) medalMap[byIFV[1].ticker] = '🥈';
   if (byIFV[2]) medalMap[byIFV[2].ticker] = '🥉';
 
   tbody.innerHTML = lista.map((r, i) => {
-    const pos        = i + 1;
     const medalEmoji = medalMap[r.ticker] || '';
     const medal      = medalEmoji ? `<span class="medal">${medalEmoji}</span>` : '';
+    const pos        = i + 1;
     const ifvColor   = classColor(r.classificacao);
-    const pct        = (r.ifv / 5 * 100).toFixed(0);
+    const pct        = (r.ifv/5*100).toFixed(0);
     const badge      = classBadgeClass(r.classificacao);
     const sroe = r.sroe ?? scoreROE(r.roe);
     const spl  = r.spl  ?? scorePL(r.pl);
@@ -794,7 +1035,7 @@ function render() {
     const sdy  = r.sdy  ?? scoreDY(r.dy);
 
     return `<tr>
-      <td><div class="rank-num">${medal}<span>${medal ? '' : pos}</span></div></td>
+      <td><div class="rank-num">${medal}<span>${medal?'':pos}</span></div></td>
       <td><div class="ticker-cell">${r.ticker}</div></td>
       <td>
         <div class="ifv-cell" style="color:${ifvColor}">${r.ifv.toFixed(2)}</div>
@@ -809,20 +1050,29 @@ function render() {
           <span class="pill" style="color:${scoreColor(sdy)}">DY ${r.dy}%</span>
         </div>
       </td>
+      <td class="col-ts ts-cell">${fmtDate(r.updatedAt)}</td>
       <td style="text-align:right;white-space:nowrap">
-        <button class="btn-edit" onclick="editar('${r.ticker}')">Editar</button>
+        <button class="btn-radar" onclick="abrirRadar('${r.ticker}')" title="Ver radar">◎</button>
+        <button class="btn-edit"  onclick="editar('${r.ticker}')">Editar</button>
         <button class="btn-delete" onclick="excluir('${r.ticker}')">✕</button>
       </td>
     </tr>`;
   }).join('');
 }
 
+// ── Keyboard shortcuts ──
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeModal(); closeRadarModal(); closeImportModal(); }
+  if (e.key === 'Enter' && document.getElementById('modalOverlay').style.display === 'flex')
+    document.getElementById('btnConfirmDelete').click();
+});
+
 // ── Mobile tabs ──
 function switchTab(panel, btn) {
   document.querySelectorAll('.tab-bar button').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  document.getElementById('panelLeft').classList.toggle('tab-active',  panel === 'left');
-  document.getElementById('panelRight').classList.toggle('tab-active', panel === 'right');
+  document.getElementById('panelLeft').classList.toggle('tab-active',  panel==='left');
+  document.getElementById('panelRight').classList.toggle('tab-active', panel==='right');
 }
 
 // ── Helpers ──
@@ -831,11 +1081,9 @@ function shake() {
   el.classList.add('shake');
   setTimeout(() => el.classList.remove('shake'), 400);
 }
-
 function toast(msg) {
   const el = document.createElement('div');
-  el.className = 'notif';
-  el.textContent = msg;
+  el.className = 'notif'; el.textContent = msg;
   document.body.appendChild(el);
   setTimeout(() => el.remove(), 2800);
 }
