@@ -51,10 +51,18 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: 'Ticker não encontrado: ' + symbol });
     }
 
-    const debt   = fd?.totalDebt?.raw;
-    const ebitda = fd?.ebitda?.raw;
-    const divida = (debt != null && ebitda != null && ebitda !== 0)
-      ? +(debt / ebitda).toFixed(2)
+    // Dívida Líquida = Dívida Total - Caixa (igual ao Status Invest)
+    // Dividido por EBIT (não EBITDA)
+    const totalDebt  = fd?.totalDebt?.raw;
+    const totalCash  = fd?.totalCash?.raw;
+    const ebit       = fd?.ebit?.raw;
+
+    const netDebt    = (totalDebt != null && totalCash != null)
+      ? totalDebt - totalCash
+      : totalDebt ?? null;
+
+    const divida = (netDebt != null && ebit != null && ebit !== 0)
+      ? +(netDebt / ebit).toFixed(2)
       : null;
 
     const resultado = {
