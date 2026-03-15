@@ -275,7 +275,7 @@ tbody tr:hover { background:var(--surface2); }
 }
 .radar-container canvas { display: block; max-width: 100%; height: auto; }
 
-.radar-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:4px; }
+.radar-stats { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-top:4px; }
 .radar-stat { background:var(--surface3); border-radius:6px; padding:8px 10px; }
 .radar-stat-label { font-family:var(--font-mono); font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:3px; }
 .radar-stat-val { font-family:var(--font-mono); font-size:13px; font-weight:700; }
@@ -396,12 +396,7 @@ tbody tr:hover { background:var(--surface2); }
         <div class="score-bar"><div class="score-fill" id="bar-pvp"></div></div>
         <div class="field-hint" id="hint-pvp"></div>
       </div>
-      <div class="indicator-wrap">
-        <div class="indicator-label">PEG <span class="indicator-score" id="sc-peg">—</span></div>
-        <input id="peg" placeholder="Ex: 1.0  (N/D = nota 1)" type="number" step="any" oninput="updateScore('peg')">
-        <div class="score-bar"><div class="score-fill" id="bar-peg"></div></div>
-        <div class="field-hint" id="hint-peg"></div>
-      </div>
+
       <div class="indicator-wrap">
         <div class="indicator-label">DY (%) <span class="indicator-score" id="sc-dy">—</span></div>
         <input id="dy" placeholder="Ex: 6.5" type="number" step="any" oninput="updateScore('dy')">
@@ -423,7 +418,7 @@ tbody tr:hover { background:var(--surface2); }
       <div class="result-ifv-row">
         <span class="result-ifv-label">IFV</span>
         <span class="result-ifv-value" id="res-ifv"></span>
-        <span style="font-family:var(--font-mono);font-size:11px;color:var(--muted)">/5</span>
+        <span style="font-family:var(--font-mono);font-size:11px;color:var(--muted)">/10</span>
       </div>
       <div class="result-class" id="res-class"></div>
       <div class="gauge-wrap">
@@ -553,17 +548,16 @@ function saveRanking() {
 const scoreROE    = v => v<5?1:v<10?2:v<15?3:v<25?4:5;
 const scorePL     = v => v>30?1:v>20?2:v>12?3:v>6?4:5;
 const scorePVP    = v => v>3?1:v>2?2:v>1?3:v>0.7?4:5;
-const scorePEG    = v => (isNaN(v)||v<=0)?1:v>2?1:v>1.5?2:v>1?3:v>0.5?4:5;
 const scoreDY     = v => v<2?1:v<4?2:v<6?3:v<10?4:5;
 const scoreDivida = v => v>4?1:v>3?2:v>2?3:v>1?4:5;
 
-const scoreMap = { roe:scoreROE, pl:scorePL, pvp:scorePVP, peg:scorePEG, dy:scoreDY, divida:scoreDivida };
-const fields   = ['roe','pl','pvp','peg','dy','divida'];
+const scoreMap = { roe:scoreROE, pl:scorePL, pvp:scorePVP, dy:scoreDY, divida:scoreDivida };
+const fields   = ['roe','pl','pvp','dy','divida'];
 
 const scoreColor = s => s<=1?'#f85149':s<=2?'#f0883e':s<=3?'#d29922':s<=4?'#3fb950':'#00e5ff';
 
 const classifyIFV = ifv =>
-  ifv>=4.5?"extraordinária":ifv>=3.5?"muito boa":ifv>=2.5?"razoável":ifv>=1.5?"cara":"muito cara";
+  ifv>=9.0?"extraordinária":ifv>=7.0?"muito boa":ifv>=5.0?"razoável":ifv>=3.0?"cara":"muito cara";
 
 function classBadgeClass(c) {
   return 'badge-' + c.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s/g,'').toLowerCase();
@@ -581,7 +575,6 @@ const rangeConfig = {
   roe:    { min: -100, max: 200,  hint: v => v < 0 ? 'ROE negativo — prejuízo' : v > 60 ? 'Valor atipicamente alto' : '' },
   pl:     { min: -500, max: 1000, hint: v => v < 0 ? 'P/L negativo — prejuízo' : v > 100 ? 'P/L muito elevado' : '' },
   pvp:    { min: -50,  max: 50,   hint: v => v < 0 ? 'P/VP negativo — incomum' : v > 10 ? 'P/VP muito elevado' : '' },
-  peg:    { min: -50,  max: 100,  hint: v => v <= 0 ? 'Indisponível/negativo — tratado como nota 1' : v > 5 ? 'PEG muito alto' : '' },
   dy:     { min: 0,    max: 100,  hint: v => v > 25 ? 'DY muito elevado — verifique' : '' },
   divida: { min: -10,  max: 50,   hint: v => v < 0 ? 'Dívida negativa (caixa líquido)' : v > 6 ? 'Alavancagem alta' : '' },
 };
@@ -596,13 +589,6 @@ function validateField(field, val) {
   if (val < cfg.min || val > cfg.max) {
     el.classList.add('input-error');
     hint.textContent = `Fora do range (${cfg.min} a ${cfg.max})`;
-    hint.style.color = 'var(--red)';
-    return;
-  }
-  // PEG = 0 é tratado como erro bloqueante
-  if (field === 'peg' && val === 0) {
-    el.classList.add('input-error');
-    hint.textContent = 'PEG = 0 é inválido — verifique o dado';
     hint.style.color = 'var(--red)';
     return;
   }
@@ -651,7 +637,7 @@ async function buscarYahoo() {
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const map = await res.json();
     if (map.error) throw new Error(map.error);
-    const nomes = { roe:'ROE', pl:'P/L', pvp:'P/VP', peg:'PEG', dy:'DY', divida:'Dívida/EBIT' };
+    const nomes = { roe:'ROE', pl:'P/L', pvp:'P/VP', dy:'DY', divida:'Dívida/EBIT' };
     const ausentes = [];
 
     for (const [field, val] of Object.entries(map)) {
@@ -681,10 +667,10 @@ async function buscarYahoo() {
 
     if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
       status.textContent = '✕ Sem conexão ou CORS bloqueado';
-    } else if (err.message.includes('404') || err.message.includes('não encontrado')) {
+    } else if (err.message.includes('404') || err.message.includes('não encontrado') || err.message.includes('Ticker')) {
       status.textContent = '✕ Ticker não encontrado — tente com .SA';
     } else {
-      status.textContent = '✕ Erro ao buscar — preencha manualmente';
+      status.textContent = '✕ Erro: ' + err.message;
     }
     toast('⚠ Não foi possível buscar dados do Yahoo Finance');
   } finally {
@@ -711,7 +697,7 @@ function calcular() {
 
   const vals = {};
   for (const f of fields) vals[f] = parseFloat(document.getElementById(f).value);
-  if (fields.filter(f => f !== 'peg').some(f => isNaN(vals[f]))) { shake(); toast("⚠ Preencha todos os indicadores"); return; }
+  if (fields.some(f => isNaN(vals[f]))) { shake(); toast("⚠ Preencha todos os indicadores"); return; }
 
   const outOfRange = fields.filter(f => {
     const cfg = rangeConfig[f];
@@ -721,13 +707,13 @@ function calcular() {
 
   const scores = {};
   for (const f of fields) scores[f] = scoreMap[f](vals[f]);
-  const ifv = fields.reduce((acc, f) => acc + scores[f], 0) / fields.length;
+  const ifv = (fields.reduce((acc, f) => acc + scores[f], 0) / fields.length) * 2;
   const classificacao = classifyIFV(ifv);
   const now = new Date().toISOString();
 
   const entry = {
     ticker, ifv, classificacao, ...vals,
-    sroe:scores.roe, spl:scores.pl, spvp:scores.pvp, speg:scores.peg, sdy:scores.dy, sdivida:scores.divida,
+    sroe:scores.roe, spl:scores.pl, spvp:scores.pvp, sdy:scores.dy, sdivida:scores.divida,
     updatedAt: now,
   };
 
@@ -768,12 +754,12 @@ function showResult(r) {
   const cl = document.getElementById("res-class");
   cl.textContent = r.classificacao.toUpperCase();
   cl.className = 'result-class ' + classBadgeClass(r.classificacao);
-  document.getElementById("res-gauge").style.width = (r.ifv/5*100) + '%';
+  document.getElementById("res-gauge").style.width = (r.ifv/10*100) + '%';
 
   const scores = [
     r.sroe ?? scoreROE(r.roe),  r.spl  ?? scorePL(r.pl),
-    r.spvp ?? scorePVP(r.pvp),  r.speg ?? scorePEG(r.peg),
-    r.sdy  ?? scoreDY(r.dy),    r.sdivida ?? scoreDivida(r.divida)
+    r.spvp ?? scorePVP(r.pvp),  r.sdy  ?? scoreDY(r.dy),
+    r.sdivida ?? scoreDivida(r.divida)
   ];
 
   const wrap = document.getElementById('resultRadarWrap');
@@ -826,9 +812,9 @@ function abrirRadar(ticker) {
   document.getElementById('radarModalSub').textContent   = 'IFV ' + r.ifv.toFixed(2) + ' · ' + r.classificacao;
 
   const scores = [
-    r.sroe ?? scoreROE(r.roe),   r.spl  ?? scorePL(r.pl),
-    r.spvp ?? scorePVP(r.pvp),   r.speg ?? scorePEG(r.peg),
-    r.sdy  ?? scoreDY(r.dy),     r.sdivida ?? scoreDivida(r.divida)
+    r.sroe ?? scoreROE(r.roe),  r.spl  ?? scorePL(r.pl),
+    r.spvp ?? scorePVP(r.pvp),  r.sdy  ?? scoreDY(r.dy),
+    r.sdivida ?? scoreDivida(r.divida)
   ];
 
   const container = document.getElementById('radarContainer');
@@ -839,9 +825,9 @@ function abrirRadar(ticker) {
   container.appendChild(cvs);
   drawRadar(cvs, scores, classColor(r.classificacao), 104);
 
-  const labels  = ['ROE','P/L','P/VP','PEG','DY','Dívi/EBIT'];
-  const rawVals = [r.roe, r.pl, r.pvp, r.peg, r.dy, r.divida];
-  const units   = ['%','×','×','×','%','×'];
+  const labels  = ['ROE','P/L','P/VP','DY','Dívi/EBIT'];
+  const rawVals = [r.roe, r.pl, r.pvp, r.dy, r.divida];
+  const units   = ['%','×','×','%','×'];
   document.getElementById('radarStats').innerHTML = labels.map((l, i) =>
     `<div class="radar-stat">
       <div class="radar-stat-label">${l}</div>
@@ -867,8 +853,8 @@ function drawRadar(canvas, scores, color, polyR) {
   const S   = canvas.width;          // side (canvas é quadrado)
   const cx  = S / 2;
   const cy  = S / 2;
-  const N   = 6;
-  const LABELS = ['ROE', 'P/L', 'P/VP', 'PEG', 'DY', 'Dívida'];
+  const N   = 5;
+  const LABELS = ['ROE', 'P/L', 'P/VP', 'DY', 'Dívida'];
 
   ctx.clearRect(0, 0, S, S);
 
@@ -1036,9 +1022,9 @@ function confirmarImport() {
   for (const r of valid) {
     const scores = {};
     for (const f of fields) scores[f] = scoreMap[f](r[f]);
-    const ifv = fields.reduce((acc,f) => acc + scores[f], 0) / fields.length;
+    const ifv = (fields.reduce((acc,f) => acc + scores[f], 0) / fields.length) * 2;
     const entry = { ...r, ifv, classificacao: classifyIFV(ifv),
-      sroe:scores.roe, spl:scores.pl, spvp:scores.pvp, speg:scores.peg, sdy:scores.dy, sdivida:scores.divida,
+      sroe:scores.roe, spl:scores.pl, spvp:scores.pvp, sdy:scores.dy, sdivida:scores.divida,
       updatedAt: r.updatedAt || new Date().toISOString(),
       createdAt: r.createdAt || new Date().toISOString(),
     };
@@ -1121,7 +1107,7 @@ function render() {
     const medal      = medalEmoji ? `<span class="medal">${medalEmoji}</span>` : '';
     const pos        = i + 1;
     const ifvColor   = classColor(r.classificacao);
-    const pct        = (r.ifv/5*100).toFixed(0);
+    const pct        = (r.ifv/10*100).toFixed(0);
     const badge      = classBadgeClass(r.classificacao);
     const sroe = r.sroe ?? scoreROE(r.roe);
     const spl  = r.spl  ?? scorePL(r.pl);
