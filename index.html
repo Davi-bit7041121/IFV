@@ -140,6 +140,21 @@ input[type=number] { -moz-appearance: textfield; }
 .btn-calc:hover::before { background:rgba(255,255,255,0.15); }
 .btn-calc:active { transform: scale(0.98); }
 
+.btn-fetch {
+  width: 100%; padding: 9px; border-radius: var(--radius);
+  background: transparent; color: var(--accent); font-family: var(--font-mono);
+  font-size: 11px; font-weight: 700; cursor: pointer; letter-spacing: 0.08em;
+  transition: all var(--transition); border: 1px solid var(--accent-border);
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  margin-bottom: 14px;
+}
+.btn-fetch:hover { background: var(--accent-dim); border-color: var(--accent); }
+.btn-fetch:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-fetch .spin { display: inline-block; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.fetch-status { font-family: var(--font-mono); font-size: 10px; text-align: center;
+  margin-bottom: 10px; min-height: 14px; letter-spacing: 0.04em; }
+
 #resultado { margin-top: 16px; padding: 16px; border-radius: var(--radius); border: 1px solid var(--border-bright); background: var(--surface2); display: none; }
 #resultado.visible { display: block; animation: slideIn 0.3s ease; }
 @keyframes slideIn { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
@@ -357,6 +372,11 @@ tbody tr:hover { background:var(--surface2); }
       </div>
     </div>
 
+    <button class="btn-fetch" id="btnFetch" onclick="buscarYahoo()">
+      <span id="fetchIcon">⟳</span> Buscar dados automaticamente
+    </button>
+    <div class="fetch-status" id="fetchStatus"></div>
+
     <div class="indicator-grid">
       <div class="indicator-wrap">
         <div class="indicator-label">ROE (%) <span class="indicator-score" id="sc-roe">—</span></div>
@@ -378,7 +398,7 @@ tbody tr:hover { background:var(--surface2); }
       </div>
       <div class="indicator-wrap">
         <div class="indicator-label">PEG <span class="indicator-score" id="sc-peg">—</span></div>
-        <input id="peg" placeholder="Ex: 1.0" type="number" step="any" oninput="updateScore('peg')">
+        <input id="peg" placeholder="Ex: 1.0  (N/D = nota 1)" type="number" step="any" oninput="updateScore('peg')">
         <div class="score-bar"><div class="score-fill" id="bar-peg"></div></div>
         <div class="field-hint" id="hint-peg"></div>
       </div>
@@ -533,7 +553,7 @@ function saveRanking() {
 const scoreROE    = v => v<5?1:v<10?2:v<15?3:v<25?4:5;
 const scorePL     = v => v>30?1:v>20?2:v>12?3:v>6?4:5;
 const scorePVP    = v => v>3?1:v>2?2:v>1?3:v>0.7?4:5;
-const scorePEG    = v => v<=0?1:v>2?1:v>1.5?2:v>1?3:v>0.5?4:5;
+const scorePEG    = v => (isNaN(v)||v<=0)?1:v>2?1:v>1.5?2:v>1?3:v>0.5?4:5;
 const scoreDY     = v => v<2?1:v<4?2:v<6?3:v<10?4:5;
 const scoreDivida = v => v>4?1:v>3?2:v>2?3:v>1?4:5;
 
@@ -561,7 +581,7 @@ const rangeConfig = {
   roe:    { min: -100, max: 200,  hint: v => v < 0 ? 'ROE negativo — prejuízo' : v > 60 ? 'Valor atipicamente alto' : '' },
   pl:     { min: -500, max: 1000, hint: v => v < 0 ? 'P/L negativo — prejuízo' : v > 100 ? 'P/L muito elevado' : '' },
   pvp:    { min: -50,  max: 50,   hint: v => v < 0 ? 'P/VP negativo — incomum' : v > 10 ? 'P/VP muito elevado' : '' },
-  peg:    { min: -50,  max: 100,  hint: v => v < 0 ? 'PEG negativo — sinal desfavorável (nota 1)' : v > 5 ? 'PEG muito alto' : '' },
+  peg:    { min: -50,  max: 100,  hint: v => v <= 0 ? 'Indisponível/negativo — tratado como nota 1' : v > 5 ? 'PEG muito alto' : '' },
   dy:     { min: 0,    max: 100,  hint: v => v > 25 ? 'DY muito elevado — verifique' : '' },
   divida: { min: -10,  max: 50,   hint: v => v < 0 ? 'Dívida negativa (caixa líquido)' : v > 6 ? 'Alavancagem alta' : '' },
 };
@@ -576,6 +596,13 @@ function validateField(field, val) {
   if (val < cfg.min || val > cfg.max) {
     el.classList.add('input-error');
     hint.textContent = `Fora do range (${cfg.min} a ${cfg.max})`;
+    hint.style.color = 'var(--red)';
+    return;
+  }
+  // PEG = 0 é tratado como erro bloqueante
+  if (field === 'peg' && val === 0) {
+    el.classList.add('input-error');
+    hint.textContent = 'PEG = 0 é inválido — verifique o dado';
     hint.style.color = 'var(--red)';
     return;
   }
@@ -603,6 +630,74 @@ function updateScore(field) {
   bar.style.background = scoreColor(s);
 }
 
+// ── Buscar Yahoo Finance ──
+async function buscarYahoo() {
+  const ticker = document.getElementById('ticker').value.trim().toUpperCase();
+  if (!ticker) { toast('⚠ Informe o ticker antes de buscar'); document.getElementById('ticker').focus(); return; }
+
+  const btn    = document.getElementById('btnFetch');
+  const status = document.getElementById('fetchStatus');
+  const icon   = document.getElementById('fetchIcon');
+
+  btn.disabled    = true;
+  icon.className  = 'spin';
+  icon.textContent = '⟳';
+  status.style.color = 'var(--muted)';
+  status.textContent = 'Buscando dados…';
+
+  const symbol = ticker.endsWith('.SA') ? ticker : ticker + '.SA';
+  try {
+    const res = await fetch(`/api/proxy?ticker=${symbol}`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const map = await res.json();
+    if (map.error) throw new Error(map.error);
+    const nomes = { roe:'ROE', pl:'P/L', pvp:'P/VP', peg:'PEG', dy:'DY', divida:'Dívida/EBIT' };
+    const ausentes = [];
+
+    for (const [field, val] of Object.entries(map)) {
+      if (val !== null) {
+        document.getElementById(field).value = val;
+        validateField(field, val);
+        updateScore(field);
+      } else {
+        ausentes.push(nomes[field]);
+      }
+    }
+
+    icon.className  = '';
+    icon.textContent = '✓';
+    if (ausentes.length === 0) {
+      status.style.color = 'var(--green)';
+      status.textContent = '✓ Todos os campos preenchidos';
+    } else {
+      status.style.color = 'var(--orange)';
+      status.textContent = `⚠ Preencha manualmente: ${ausentes.join(', ')}`;
+    }
+
+  } catch (err) {
+    icon.className  = '';
+    icon.textContent = '⟳';
+    status.style.color = 'var(--red)';
+
+    if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
+      status.textContent = '✕ Sem conexão ou CORS bloqueado';
+    } else if (err.message.includes('404') || err.message.includes('não encontrado')) {
+      status.textContent = '✕ Ticker não encontrado — tente com .SA';
+    } else {
+      status.textContent = '✕ Erro ao buscar — preencha manualmente';
+    }
+    toast('⚠ Não foi possível buscar dados do Yahoo Finance');
+  } finally {
+    btn.disabled = false;
+    setTimeout(() => {
+      if (status.textContent.startsWith('✓')) {
+        status.textContent = '';
+        icon.textContent = '⟳';
+      }
+    }, 4000);
+  }
+}
+
 function handleTickerPaste(e) {
   e.preventDefault();
   const pasted = (e.clipboardData || window.clipboardData).getData('text');
@@ -616,7 +711,7 @@ function calcular() {
 
   const vals = {};
   for (const f of fields) vals[f] = parseFloat(document.getElementById(f).value);
-  if (fields.some(f => isNaN(vals[f]))) { shake(); toast("⚠ Preencha todos os indicadores"); return; }
+  if (fields.filter(f => f !== 'peg').some(f => isNaN(vals[f]))) { shake(); toast("⚠ Preencha todos os indicadores"); return; }
 
   const outOfRange = fields.filter(f => {
     const cfg = rangeConfig[f];
@@ -676,14 +771,13 @@ function showResult(r) {
   document.getElementById("res-gauge").style.width = (r.ifv/5*100) + '%';
 
   const scores = [
-    r.sroe ?? scoreROE(r.roe),   r.spl  ?? scorePL(r.pl),
-    r.spvp ?? scorePVP(r.pvp),   r.speg ?? scorePEG(r.peg),
-    r.sdy  ?? scoreDY(r.dy),     r.sdivida ?? scoreDivida(r.divida)
+    r.sroe ?? scoreROE(r.roe),  r.spl  ?? scorePL(r.pl),
+    r.spvp ?? scorePVP(r.pvp),  r.speg ?? scorePEG(r.peg),
+    r.sdy  ?? scoreDY(r.dy),    r.sdivida ?? scoreDivida(r.divida)
   ];
 
   const wrap = document.getElementById('resultRadarWrap');
   wrap.innerHTML = '';
-  // 260px canvas, 78px de raio → 52px de margem para labels em cada lado
   const cvs = document.createElement('canvas');
   cvs.width = cvs.height = 260;
   wrap.appendChild(cvs);
