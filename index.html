@@ -655,13 +655,15 @@ async function buscarYahoo() {
     const nomes = { roe:'ROE', pl:'P/L', pvp:'P/VP', dy:'DY', divida:'Dívida/EBIT' };
     const ausentes = [];
 
-    for (const [field, val] of Object.entries(map)) {
-      if (val !== null) {
+    // Itera só nos campos do formulário, ignora nome e outros campos extras
+    for (const [field, label] of Object.entries(nomes)) {
+      const val = map[field];
+      if (val !== null && val !== undefined) {
         document.getElementById(field).value = val;
         validateField(field, val);
         updateScore(field);
       } else {
-        ausentes.push(nomes[field]);
+        ausentes.push(label);
       }
     }
 
