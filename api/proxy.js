@@ -81,14 +81,6 @@ export default async function handler(req, res) {
       pvp:    ks?.priceToBook?.raw    != null ? +(ks.priceToBook.raw).toFixed(2)          : null,
       dy:     dyRaw                   != null ? +(dyRaw * 100).toFixed(2)                 : null,
       divida,
-      _debug: {
-        dividendRate_raw:    sd?.trailingAnnualDividendRate?.raw,
-        dividendYield_raw:   sd?.dividendYield?.raw,
-        trailingYield_raw:   sd?.trailingAnnualDividendYield?.raw,
-        precoAtual:          pr?.regularMarketPrice?.raw,
-        precoSD:             sd?.regularMarketPrice?.raw,
-        dyRawUsado:          dyRaw,
-      }
     };
 
     res.setHeader('Access-Control-Allow-Origin', '*');
