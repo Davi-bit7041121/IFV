@@ -52,6 +52,21 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: 'Ticker não encontrado: ' + symbol });
     }
 
+    // Brapi: DY, ROE e P/VP mais precisos para ações BR (dados direto da B3)
+    let dyBrapi = null, roeBrapi = null, pvpBrapi = null, plBrapi = null;
+    try {
+      const tickerSemSA = symbol.replace('.SA', '');
+      const brapiRes = await fetch(`https://brapi.dev/api/quote/${tickerSemSA}?fundamental=true`);
+      if (brapiRes.ok) {
+        const brapiData = await brapiRes.json();
+        const q = brapiData?.results?.[0];
+        if (q?.dividendYield  != null) dyBrapi  = +(q.dividendYield).toFixed(2);  // já em %
+        if (q?.priceEarnings  != null) plBrapi  = +(q.priceEarnings).toFixed(2);
+        if (q?.priceToBook    != null) pvpBrapi = +(q.priceToBook).toFixed(2);
+        if (q?.returnOnEquity != null) roeBrapi = +(q.returnOnEquity * 100).toFixed(2);
+      }
+    } catch (e) { /* se Brapi falhar, usa Yahoo como fallback */ }
+
     // Dívida Líquida ÷ EBITDA (igual ao Status Invest)
     const totalDebt  = fd?.totalDebt?.raw;
     const totalCash  = fd?.totalCash?.raw;
@@ -65,21 +80,23 @@ export default async function handler(req, res) {
       ? +(netDebt / ebitda).toFixed(2)
       : null;
 
-    // DY correto = dividendos pagos nos últimos 12 meses / preço atual (igual Status Invest)
-    const dividendRate  = sd?.trailingAnnualDividendRate?.raw; // valor em R$ pago no ano
-    const precoAtual    = pr?.regularMarketPrice?.raw ?? sd?.regularMarketPrice?.raw;
-    let dyRaw = null;
+    // DY: Brapi tem prioridade (mais preciso para BR), Yahoo como fallback
+    const dividendRate = sd?.trailingAnnualDividendRate?.raw;
+    const precoAtual   = pr?.regularMarketPrice?.raw ?? sd?.regularMarketPrice?.raw;
+    let dyYahoo = null;
     if (dividendRate != null && precoAtual != null && precoAtual !== 0) {
-      dyRaw = dividendRate / precoAtual; // calcula sobre preço atual
-    } else {
-      dyRaw = sd?.dividendYield?.raw ?? null; // fallback
+      dyYahoo = +(( dividendRate / precoAtual) * 100).toFixed(2);
+    } else if (sd?.dividendYield?.raw != null) {
+      dyYahoo = +(sd.dividendYield.raw * 100).toFixed(2);
     }
+    const dy = dyBrapi ?? dyYahoo;
 
+    // Brapi tem prioridade em todos os campos, Yahoo como fallback
     const resultado = {
-      roe:    fd?.returnOnEquity?.raw != null ? +(fd.returnOnEquity.raw * 100).toFixed(2) : null,
-      pl:     sd?.trailingPE?.raw     != null ? +(sd.trailingPE.raw).toFixed(2)           : null,
-      pvp:    ks?.priceToBook?.raw    != null ? +(ks.priceToBook.raw).toFixed(2)          : null,
-      dy:     dyRaw                   != null ? +(dyRaw * 100).toFixed(2)                 : null,
+      roe:    roeBrapi ?? (fd?.returnOnEquity?.raw != null ? +(fd.returnOnEquity.raw * 100).toFixed(2) : null),
+      pl:     plBrapi  ?? (sd?.trailingPE?.raw     != null ? +(sd.trailingPE.raw).toFixed(2)           : null),
+      pvp:    pvpBrapi ?? (ks?.priceToBook?.raw     != null ? +(ks.priceToBook.raw).toFixed(2)          : null),
+      dy,
       divida,
     };
 
