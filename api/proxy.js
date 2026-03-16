@@ -64,13 +64,23 @@ export default async function handler(req, res) {
       ? +(netDebt / ebitda).toFixed(2)
       : null;
 
+    // trailingAnnualDividendYield = DY dos últimos 12 meses reais (mais próximo do Status Invest)
+    // dividendYield = yield projetado (menos preciso)
+    const dyRaw = sd?.trailingAnnualDividendYield?.raw ?? sd?.dividendYield?.raw;
+
+    // Debug: retorna valores brutos para diagnóstico
+    const _debug = {
+      dividendYield_raw:              sd?.dividendYield?.raw,
+      trailingAnnualDividendYield_raw: sd?.trailingAnnualDividendYield?.raw,
+    };
+
     const resultado = {
       roe:    fd?.returnOnEquity?.raw != null ? +(fd.returnOnEquity.raw * 100).toFixed(2) : null,
       pl:     sd?.trailingPE?.raw     != null ? +(sd.trailingPE.raw).toFixed(2)           : null,
       pvp:    ks?.priceToBook?.raw    != null ? +(ks.priceToBook.raw).toFixed(2)          : null,
-      peg:    ks?.pegRatio?.raw       != null ? +(ks.pegRatio.raw).toFixed(2)             : null,
-      dy:     sd?.dividendYield?.raw  != null ? +(sd.dividendYield.raw * 100).toFixed(2)  : null,
+      dy:     dyRaw                   != null ? +(dyRaw * 100).toFixed(2)                 : null,
       divida,
+      _debug,
     };
 
     res.setHeader('Access-Control-Allow-Origin', '*');
