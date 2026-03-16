@@ -31,7 +31,7 @@ export default async function handler(req, res) {
     }
 
     // Passo 2: buscar dados com crumb
-    const url = `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${symbol}?modules=defaultKeyStatistics%2CfinancialData%2CsummaryDetail&crumb=${encodeURIComponent(crumb)}`;
+    const url = `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${symbol}?modules=defaultKeyStatistics%2CfinancialData%2CsummaryDetail%2Cprice&crumb=${encodeURIComponent(crumb)}`;
 
     const dataRes = await fetch(url, {
       headers: { ...headers, 'Cookie': cookies }
@@ -46,6 +46,7 @@ export default async function handler(req, res) {
     const ks = data?.quoteSummary?.result?.[0]?.defaultKeyStatistics;
     const fd = data?.quoteSummary?.result?.[0]?.financialData;
     const sd = data?.quoteSummary?.result?.[0]?.summaryDetail;
+    const pr = data?.quoteSummary?.result?.[0]?.price;
 
     if (!ks || !fd || !sd) {
       return res.status(404).json({ error: 'Ticker não encontrado: ' + symbol });
@@ -64,15 +65,15 @@ export default async function handler(req, res) {
       ? +(netDebt / ebitda).toFixed(2)
       : null;
 
-    // trailingAnnualDividendYield = DY dos últimos 12 meses reais (mais próximo do Status Invest)
-    // dividendYield = yield projetado (menos preciso)
-    const dyRaw = sd?.trailingAnnualDividendYield?.raw ?? sd?.dividendYield?.raw;
-
-    // Debug: retorna valores brutos para diagnóstico
-    const _debug = {
-      dividendYield_raw:              sd?.dividendYield?.raw,
-      trailingAnnualDividendYield_raw: sd?.trailingAnnualDividendYield?.raw,
-    };
+    // DY correto = dividendos pagos nos últimos 12 meses / preço atual (igual Status Invest)
+    const dividendRate  = sd?.trailingAnnualDividendRate?.raw; // valor em R$ pago no ano
+    const precoAtual    = pr?.regularMarketPrice?.raw ?? sd?.regularMarketPrice?.raw;
+    let dyRaw = null;
+    if (dividendRate != null && precoAtual != null && precoAtual !== 0) {
+      dyRaw = dividendRate / precoAtual; // calcula sobre preço atual
+    } else {
+      dyRaw = sd?.dividendYield?.raw ?? null; // fallback
+    }
 
     const resultado = {
       roe:    fd?.returnOnEquity?.raw != null ? +(fd.returnOnEquity.raw * 100).toFixed(2) : null,
@@ -80,7 +81,6 @@ export default async function handler(req, res) {
       pvp:    ks?.priceToBook?.raw    != null ? +(ks.priceToBook.raw).toFixed(2)          : null,
       dy:     dyRaw                   != null ? +(dyRaw * 100).toFixed(2)                 : null,
       divida,
-      _debug,
     };
 
     res.setHeader('Access-Control-Allow-Origin', '*');
