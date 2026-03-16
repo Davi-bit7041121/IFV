@@ -208,7 +208,10 @@ tbody tr:hover { background:var(--surface2); }
 
 .rank-num { font-family:var(--font-mono); font-size:11px; color:var(--muted); display:flex; align-items:center; gap:5px; }
 .medal { font-size:14px; line-height:1; }
-.ticker-cell { font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:0.05em; }
+.ticker-cell { font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:0.05em; cursor:pointer; transition:color var(--transition); }
+.ticker-cell:hover { color:var(--accent); }
+.company-name { font-size:11px; color:var(--muted); font-family:var(--font-display); font-weight:400; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:160px; }
+.result-company { font-family:var(--font-display); font-size:12px; color:var(--muted); margin-top:2px; margin-bottom:4px; }
 .ifv-cell { font-family:var(--font-mono); font-size:15px; font-weight:700; }
 .ifv-mini-bar { height:3px; background:var(--border); border-radius:3px; margin-top:4px; overflow:hidden; width:56px; }
 .ifv-mini-fill { height:100%; border-radius:3px; }
@@ -217,15 +220,14 @@ tbody tr:hover { background:var(--surface2); }
 .pill { font-family:var(--font-mono); font-size:9px; padding:2px 6px; border-radius:3px; background:var(--surface3); color:var(--muted); border:1px solid var(--border); white-space:nowrap; }
 .ts-cell { font-family:var(--font-mono); font-size:10px; color:var(--muted); white-space:nowrap; }
 
-.btn-radar, .btn-edit, .btn-delete {
+.btn-radar, .btn-delete {
   padding:5px 9px; border:1px solid var(--border-bright); border-radius:5px;
   background:transparent; font-family:var(--font-mono); font-size:11px;
   cursor:pointer; transition:all var(--transition);
 }
 .btn-radar  { color:var(--accent); margin-right:2px; }
 .btn-radar:hover  { background:var(--accent-dim); border-color:var(--accent); }
-.btn-edit   { color:var(--muted); }
-.btn-edit:hover   { background:var(--surface3); border-color:var(--border-bright); color:var(--text); }
+
 .btn-delete { color:var(--red); margin-left:2px; }
 .btn-delete:hover { background:var(--red-dim); border-color:var(--red); }
 
@@ -367,7 +369,7 @@ tbody tr:hover { background:var(--surface2); }
       <div class="ticker-input-wrap">
         <span class="ticker-prefix">$</span>
         <input id="ticker" placeholder="TICKER" autocomplete="off" spellcheck="false"
-               oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')"
+               oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'');window._nomeEmpresa='';const n=document.getElementById('ticker-nome');if(n)n.textContent='';"
                onpaste="handleTickerPaste(event)">
       </div>
     </div>
@@ -467,7 +469,7 @@ tbody tr:hover { background:var(--surface2); }
               <th>Classificação</th>
               <th class="col-indicators">Indicadores</th>
               <th class="col-ts" data-col="updatedAt">Atualizado</th>
-              <th style="text-align:right">Ações</th>
+              <th style="text-align:right;width:70px"></th>
             </tr>
           </thead>
           <tbody id="tbody"></tbody>
@@ -637,6 +639,19 @@ async function buscarYahoo() {
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const map = await res.json();
     if (map.error) throw new Error(map.error);
+
+    // Mostrar nome da empresa embaixo do ticker
+    if (map.nome) {
+      window._nomeEmpresa = map.nome;
+      let nomeEl = document.getElementById('ticker-nome');
+      if (!nomeEl) {
+        nomeEl = document.createElement('div');
+        nomeEl.id = 'ticker-nome';
+        nomeEl.style.cssText = 'font-size:11px;color:var(--muted);font-family:var(--font-display);margin-top:4px;padding-left:28px;';
+        document.querySelector('.ticker-input-wrap').appendChild(nomeEl);
+      }
+      nomeEl.textContent = map.nome;
+    }
     const nomes = { roe:'ROE', pl:'P/L', pvp:'P/VP', dy:'DY', divida:'Dívida/EBIT' };
     const ausentes = [];
 
@@ -712,7 +727,7 @@ function calcular() {
   const now = new Date().toISOString();
 
   const entry = {
-    ticker, ifv, classificacao, ...vals,
+    ticker, nome: window._nomeEmpresa || '', ifv, classificacao, ...vals,
     sroe:scores.roe, spl:scores.pl, spvp:scores.pvp, sdy:scores.dy, sdivida:scores.divida,
     updatedAt: now,
   };
@@ -748,6 +763,14 @@ function showResult(r) {
   const res = document.getElementById("resultado");
   res.classList.add('visible');
   document.getElementById("res-ticker").textContent = r.ticker;
+  let resCompany = document.getElementById('res-company');
+  if (!resCompany) {
+    resCompany = document.createElement('div');
+    resCompany.id = 'res-company';
+    resCompany.className = 'result-company';
+    document.getElementById('res-ticker').insertAdjacentElement('afterend', resCompany);
+  }
+  resCompany.textContent = r.nome || '';
   const ifvEl = document.getElementById("res-ifv");
   ifvEl.textContent = r.ifv.toFixed(2);
   ifvEl.style.color = classColor(r.classificacao);
@@ -775,6 +798,15 @@ function editar(ticker) {
   const r = ranking.find(x => x.ticker === ticker);
   if (!r) return;
   document.getElementById("ticker").value = r.ticker;
+  window._nomeEmpresa = r.nome || '';
+  let nomeEl = document.getElementById('ticker-nome');
+  if (!nomeEl) {
+    nomeEl = document.createElement('div');
+    nomeEl.id = 'ticker-nome';
+    nomeEl.style.cssText = 'font-size:11px;color:var(--muted);font-family:var(--font-display);margin-top:4px;padding-left:28px;';
+    document.querySelector('.ticker-input-wrap').appendChild(nomeEl);
+  }
+  nomeEl.textContent = r.nome || '';
   for (const f of fields) { document.getElementById(f).value = r[f]; }
   fields.forEach(f => { validateField(f, r[f]); updateScore(f); });
   showResult(r);
@@ -1116,12 +1148,16 @@ function render() {
 
     return `<tr>
       <td><div class="rank-num">${medal}<span>${medal?'':pos}</span></div></td>
-      <td><div class="ticker-cell">${r.ticker}</div></td>
+      <td><div class="ticker-cell" onclick="editar('${r.ticker}')" title="Clique para editar">${r.ticker}${r.nome ? `<div class="company-name">${r.nome}</div>` : ''}</div></td>
       <td>
         <div class="ifv-cell" style="color:${ifvColor}">${r.ifv.toFixed(2)}</div>
         <div class="ifv-mini-bar"><div class="ifv-mini-fill" style="width:${pct}%;background:${ifvColor}"></div></div>
       </td>
-      <td><span class="class-badge ${badge}">${r.classificacao}</span></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span class="class-badge ${badge}">${r.classificacao}</span>
+        </div>
+      </td>
       <td class="col-indicators">
         <div class="indicator-pills">
           <span class="pill" style="color:${scoreColor(sroe)}">ROE ${r.roe}%</span>
@@ -1131,9 +1167,8 @@ function render() {
         </div>
       </td>
       <td class="col-ts ts-cell">${fmtDate(r.updatedAt)}</td>
-      <td style="text-align:right;white-space:nowrap">
+      <td style="text-align:right;white-space:nowrap;width:70px">
         <button class="btn-radar" onclick="abrirRadar('${r.ticker}')" title="Ver radar">◎</button>
-        <button class="btn-edit"  onclick="editar('${r.ticker}')">Editar</button>
         <button class="btn-delete" onclick="excluir('${r.ticker}')">✕</button>
       </td>
     </tr>`;
