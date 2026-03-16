@@ -70,13 +70,25 @@ export default async function handler(req, res) {
       dy = +(sd.dividendYield.raw * 100).toFixed(2);
     }
 
-    const resultado = {
-      roe:    fd?.returnOnEquity?.raw != null ? +(fd.returnOnEquity.raw * 100).toFixed(2) : null,
-      pl:     sd?.trailingPE?.raw     != null ? +(sd.trailingPE.raw).toFixed(2)           : null,
-      pvp:    ks?.priceToBook?.raw    != null ? +(ks.priceToBook.raw).toFixed(2)          : null,
-      dy,
-      divida,
-    };
+    // P/L: prefere o trailing (12 meses reais) ao forward (projeção)
+    const pl = sd?.trailingPE?.raw != null
+      ? +(sd.trailingPE.raw).toFixed(2)
+      : (pr?.trailingPE?.raw != null ? +(pr.trailingPE.raw).toFixed(2) : null);
+
+    // ROE: Yahoo retorna em decimal (0.15 = 15%)
+    const roe = fd?.returnOnEquity?.raw != null
+      ? +(fd.returnOnEquity.raw * 100).toFixed(2)
+      : null;
+
+    // P/VP: usa priceToBook do defaultKeyStatistics (mais atualizado)
+    const pvp = ks?.priceToBook?.raw != null
+      ? +(ks.priceToBook.raw).toFixed(2)
+      : (pr?.priceToBook?.raw != null ? +(pr.priceToBook.raw).toFixed(2) : null);
+
+    // Nome da empresa
+    const nome = pr?.longName ?? pr?.shortName ?? sd?.longName ?? null;
+
+    const resultado = { nome, roe, pl, pvp, dy, divida };
 
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Cache-Control', 's-maxage=300');
