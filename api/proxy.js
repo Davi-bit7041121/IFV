@@ -67,6 +67,9 @@ export default async function handler(req, res) {
       }
     } catch (e) { /* se Brapi falhar, usa Yahoo como fallback */ }
 
+    // Debug Brapi
+    const _debugBrapi = { dyBrapi, roeBrapi, pvpBrapi, plBrapi };
+
     // Dívida Líquida ÷ EBITDA (igual ao Status Invest)
     const totalDebt  = fd?.totalDebt?.raw;
     const totalCash  = fd?.totalCash?.raw;
@@ -102,7 +105,7 @@ export default async function handler(req, res) {
 
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Cache-Control', 's-maxage=300');
-    return res.status(200).json(resultado);
+    return res.status(200).json({ ...resultado, _debugBrapi });
 
   } catch (err) {
     return res.status(500).json({ error: 'Erro interno: ' + err.message });
