@@ -17,11 +17,11 @@ export default async function handler(req, res) {
   };
 
   try {
-    // Passo 1: buscar cookie + crumb (obrigatório desde 2024)
+    // Passo 1: cookie + crumb
     const cookieRes = await fetch('https://fc.yahoo.com', { headers });
     const cookies   = cookieRes.headers.get('set-cookie') || '';
 
-    const crumbRes  = await fetch('https://query1.finance.yahoo.com/v1/test/getcrumb', {
+    const crumbRes = await fetch('https://query1.finance.yahoo.com/v1/test/getcrumb', {
       headers: { ...headers, 'Cookie': cookies }
     });
     const crumb = await crumbRes.text();
@@ -30,7 +30,7 @@ export default async function handler(req, res) {
       throw new Error('Não foi possível obter crumb do Yahoo Finance');
     }
 
-    // Passo 2: buscar dados com crumb
+    // Passo 2: dados completos incluindo módulo price para preço atual
     const url = `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${symbol}?modules=defaultKeyStatistics%2CfinancialData%2CsummaryDetail%2Cprice&crumb=${encodeURIComponent(crumb)}`;
 
     const dataRes = await fetch(url, {
@@ -52,60 +52,35 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: 'Ticker não encontrado: ' + symbol });
     }
 
-    // Brapi: DY, ROE e P/VP mais precisos para ações BR (dados direto da B3)
-    let dyBrapi = null, roeBrapi = null, pvpBrapi = null, plBrapi = null;
-    try {
-      const tickerSemSA = symbol.replace('.SA', '');
-      const brapiRes = await fetch(`https://brapi.dev/api/quote/${tickerSemSA}?fundamental=true`);
-      if (brapiRes.ok) {
-        const brapiData = await brapiRes.json();
-        const q = brapiData?.results?.[0];
-        if (q?.dividendYield  != null) dyBrapi  = +(q.dividendYield).toFixed(2);  // já em %
-        if (q?.priceEarnings  != null) plBrapi  = +(q.priceEarnings).toFixed(2);
-        if (q?.priceToBook    != null) pvpBrapi = +(q.priceToBook).toFixed(2);
-        if (q?.returnOnEquity != null) roeBrapi = +(q.returnOnEquity * 100).toFixed(2);
-      }
-    } catch (e) { /* se Brapi falhar, usa Yahoo como fallback */ }
+    // Dívida Líquida / EBITDA
+    const totalDebt = fd?.totalDebt?.raw;
+    const totalCash = fd?.totalCash?.raw;
+    const ebitda    = fd?.ebitda?.raw;
+    const netDebt   = (totalDebt != null && totalCash != null) ? totalDebt - totalCash : totalDebt ?? null;
+    const divida    = (netDebt != null && ebitda != null && ebitda !== 0)
+      ? +(netDebt / ebitda).toFixed(2) : null;
 
-    // Debug Brapi
-    const _debugBrapi = { dyBrapi, roeBrapi, pvpBrapi, plBrapi };
-
-    // Dívida Líquida ÷ EBITDA (igual ao Status Invest)
-    const totalDebt  = fd?.totalDebt?.raw;
-    const totalCash  = fd?.totalCash?.raw;
-    const ebitda     = fd?.ebitda?.raw;
-
-    const netDebt    = (totalDebt != null && totalCash != null)
-      ? totalDebt - totalCash
-      : totalDebt ?? null;
-
-    const divida = (netDebt != null && ebitda != null && ebitda !== 0)
-      ? +(netDebt / ebitda).toFixed(2)
-      : null;
-
-    // DY: Brapi tem prioridade (mais preciso para BR), Yahoo como fallback
+    // DY = dividendos pagos nos últimos 12 meses / preço atual
     const dividendRate = sd?.trailingAnnualDividendRate?.raw;
     const precoAtual   = pr?.regularMarketPrice?.raw ?? sd?.regularMarketPrice?.raw;
-    let dyYahoo = null;
+    let dy = null;
     if (dividendRate != null && precoAtual != null && precoAtual !== 0) {
-      dyYahoo = +(( dividendRate / precoAtual) * 100).toFixed(2);
+      dy = +(( dividendRate / precoAtual) * 100).toFixed(2);
     } else if (sd?.dividendYield?.raw != null) {
-      dyYahoo = +(sd.dividendYield.raw * 100).toFixed(2);
+      dy = +(sd.dividendYield.raw * 100).toFixed(2);
     }
-    const dy = dyBrapi ?? dyYahoo;
 
-    // Brapi tem prioridade em todos os campos, Yahoo como fallback
     const resultado = {
-      roe:    roeBrapi ?? (fd?.returnOnEquity?.raw != null ? +(fd.returnOnEquity.raw * 100).toFixed(2) : null),
-      pl:     plBrapi  ?? (sd?.trailingPE?.raw     != null ? +(sd.trailingPE.raw).toFixed(2)           : null),
-      pvp:    pvpBrapi ?? (ks?.priceToBook?.raw     != null ? +(ks.priceToBook.raw).toFixed(2)          : null),
+      roe:    fd?.returnOnEquity?.raw != null ? +(fd.returnOnEquity.raw * 100).toFixed(2) : null,
+      pl:     sd?.trailingPE?.raw     != null ? +(sd.trailingPE.raw).toFixed(2)           : null,
+      pvp:    ks?.priceToBook?.raw    != null ? +(ks.priceToBook.raw).toFixed(2)          : null,
       dy,
       divida,
     };
 
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Cache-Control', 's-maxage=300');
-    return res.status(200).json({ ...resultado, _debugBrapi });
+    return res.status(200).json(resultado);
 
   } catch (err) {
     return res.status(500).json({ error: 'Erro interno: ' + err.message });
