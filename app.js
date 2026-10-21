@@ -11,10 +11,10 @@ function loadRanking() {
     if (raw) {
       const arr = JSON.parse(raw);
       ranking = (Array.isArray(arr) ? arr : [])
-        .filter(r => r && typeof r.ticker === 'string' && fields.every(f => Number.isFinite(r[f])))
+        .filter(r => r && typeof r.ticker === 'string' && hasValidIndicators(r))
         .map(r => buildEntry(
           r.ticker, typeof r.nome === 'string' ? r.nome : '',
-          Object.fromEntries(fields.map(f => [f, r[f]])),
+          normalizeVals(r),
           r.updatedAt || new Date().toISOString(), r.createdAt || r.updatedAt || new Date().toISOString()
         ));
     }
@@ -35,6 +35,29 @@ const scoreDivida = v => v>4?1:v>3?2:v>2?3:v>1?4:5;
 
 const scoreMap = { roe:scoreROE, pl:scorePL, pvp:scorePVP, dy:scoreDY, divida:scoreDivida };
 const fields   = ['roe','pl','pvp','dy','divida'];
+// DL/EBITDA é opcional: não se aplica a bancos, seguradoras etc. Nesse caso (null) fica fora da média.
+const requiredFields = ['roe','pl','pvp','dy'];
+const radarShort = { roe:'ROE', pl:'P/L', pvp:'P/VP', dy:'DY', divida:'Dívida' };
+const statLabel  = { roe:'ROE', pl:'P/L', pvp:'P/VP', dy:'DY', divida:'DL/EBITDA' };
+
+// Indicadores válidos: obrigatórios numéricos; divida numérica ou ausente (null)
+function hasValidIndicators(r) {
+  return !!r && requiredFields.every(f => Number.isFinite(r[f])) &&
+         (r.divida === null || r.divida === undefined || Number.isFinite(r.divida));
+}
+// Normaliza: ausente/ inválido → null
+const normalizeVals = r => Object.fromEntries(fields.map(f => [f, Number.isFinite(r[f]) ? r[f] : null]));
+
+// Dados do radar: só os indicadores aplicáveis
+function radarData(r) {
+  const labels = [], scores = [];
+  for (const f of fields) {
+    if (!Number.isFinite(r[f])) continue;
+    labels.push(radarShort[f]);
+    scores.push(scoreMap[f](r[f]));
+  }
+  return { labels, scores };
+}
 
 const scoreColor = s => s<=1?'#f85149':s<=2?'#f0883e':s<=3?'#d29922':s<=4?'#3fb950':'#00e5ff';
 
@@ -59,12 +82,13 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
 // ── Monta uma entrada do ranking (fonte única de verdade para IFV/scores) ──
 function buildEntry(ticker, nome, vals, updatedAt, createdAt) {
   const scores = {};
-  for (const f of fields) scores[f] = scoreMap[f](vals[f]);
-  const ifv = (fields.reduce((acc, f) => acc + scores[f], 0) / fields.length) * 2;
+  const aplicaveis = fields.filter(f => Number.isFinite(vals[f]));
+  for (const f of aplicaveis) scores[f] = scoreMap[f](vals[f]);
+  const ifv = (aplicaveis.reduce((acc, f) => acc + scores[f], 0) / aplicaveis.length) * 2;
   return {
     ticker, nome, ifv, classificacao: classifyIFV(ifv),
     ...vals,
-    sroe: scores.roe, spl: scores.pl, spvp: scores.pvp, sdy: scores.dy, sdivida: scores.divida,
+    sroe: scores.roe, spl: scores.pl, spvp: scores.pvp, sdy: scores.dy, sdivida: scores.divida ?? null,
     updatedAt, createdAt,
   };
 }
@@ -117,6 +141,13 @@ function updateScore(field) {
   const sc  = document.getElementById('sc-' + field);
   const bar = document.getElementById('bar-' + field);
   validateField(field, val);
+  if (field === 'divida' && document.getElementById('divida-na')?.checked) {
+    sc.textContent = 'N/A'; sc.classList.add('visible');
+    bar.style.width = '0%'; bar.style.background = 'var(--border)';
+    const hint = document.getElementById('hint-divida');
+    hint.textContent = 'Fora do cálculo do IFV'; hint.style.color = 'var(--muted)';
+    return;
+  }
   if (isNaN(val)) {
     sc.textContent = '—'; sc.classList.remove('visible');
     bar.style.width = '0%'; bar.style.background = 'var(--border)';
@@ -127,6 +158,17 @@ function updateScore(field) {
   bar.style.width = (s/5*100) + '%';
   bar.style.background = scoreColor(s);
 }
+
+// ── "Não se aplica" para DL/EBITDA (bancos, seguradoras...) ──
+function setDividaNA(on) {
+  const chk = document.getElementById('divida-na');
+  const inp = document.getElementById('divida');
+  chk.checked = on;
+  inp.disabled = on;
+  if (on) inp.value = '';
+  updateScore('divida');
+}
+function toggleDividaNA() { setDividaNA(document.getElementById('divida-na').checked); }
 
 // ── Buscar Yahoo Finance ──
 async function buscarYahoo() {
@@ -156,9 +198,12 @@ async function buscarYahoo() {
     if (map.nome) setNomeEmpresa(map.nome);
     const nomes = { roe:'ROE', pl:'P/L', pvp:'P/VP', dy:'DY', divida:'DL/EBITDA' };
     const ausentes = [];
+    const financeira = map.financeira === true;
+    setDividaNA(financeira); // instituição financeira → DL/EBITDA não se aplica
 
     // Itera só nos campos do formulário, ignora nome e outros campos extras
     for (const [field, label] of Object.entries(nomes)) {
+      if (field === 'divida' && financeira) continue;
       const val = map[field];
       if (val !== null && val !== undefined) {
         document.getElementById(field).value = val;
@@ -173,10 +218,13 @@ async function buscarYahoo() {
     icon.textContent = '✓';
     if (ausentes.length === 0) {
       status.style.color = 'var(--green)';
-      status.textContent = '✓ Todos os campos preenchidos';
+      status.textContent = financeira
+        ? '✓ Preenchido — DL/EBITDA não se aplica (instituição financeira)'
+        : '✓ Todos os campos preenchidos';
     } else {
       status.style.color = 'var(--orange)';
-      status.textContent = `⚠ Preencha manualmente: ${ausentes.join(', ')}`;
+      status.textContent = `⚠ Preencha manualmente: ${ausentes.join(', ')}` +
+        (ausentes.includes('DL/EBITDA') ? ' (DL/EBITDA pode ser “Não se aplica”)' : '');
     }
 
   } catch (err) {
@@ -217,11 +265,18 @@ function calcular() {
   const ticker = document.getElementById("ticker").value.trim().toUpperCase();
   if (!ticker) { document.getElementById('ticker').focus(); shake(); toast("⚠ Informe o ticker do ativo"); return; }
 
+  const naDivida = document.getElementById('divida-na').checked;
   const vals = {};
-  for (const f of fields) vals[f] = parseFloat(document.getElementById(f).value);
-  if (fields.some(f => isNaN(vals[f]))) { shake(); toast("⚠ Preencha todos os indicadores"); return; }
+  for (const f of fields) vals[f] = (f === 'divida' && naDivida) ? null : parseFloat(document.getElementById(f).value);
+  const faltando = fields.filter(f => vals[f] !== null && isNaN(vals[f]));
+  if (faltando.length) {
+    shake();
+    toast("⚠ Preencha todos os indicadores" + (faltando.includes('divida') ? " (DL/EBITDA pode ser “Não se aplica”)" : ""));
+    return;
+  }
 
   const outOfRange = fields.filter(f => {
+    if (vals[f] === null) return false;
     const cfg = rangeConfig[f];
     return vals[f] < cfg.min || vals[f] > cfg.max;
   });
@@ -277,18 +332,17 @@ function showResult(r) {
   cl.className = 'result-class ' + classBadgeClass(r.classificacao);
   document.getElementById("res-gauge").style.width = (r.ifv/10*100) + '%';
 
-  const scores = [
-    r.sroe ?? scoreROE(r.roe),  r.spl  ?? scorePL(r.pl),
-    r.spvp ?? scorePVP(r.pvp),  r.sdy  ?? scoreDY(r.dy),
-    r.sdivida ?? scoreDivida(r.divida)
-  ];
+  const { labels, scores } = radarData(r);
+  const noteEl = document.getElementById('res-note');
+  if (noteEl) noteEl.textContent = labels.length < fields.length
+    ? `IFV calculado com ${labels.length} indicadores (DL/EBITDA não se aplica)` : '';
 
   const wrap = document.getElementById('resultRadarWrap');
   wrap.innerHTML = '';
   const cvs = document.createElement('canvas');
   cvs.width = cvs.height = 260;
   wrap.appendChild(cvs);
-  drawRadar(cvs, scores, classColor(r.classificacao), 78);
+  drawRadar(cvs, scores, classColor(r.classificacao), 78, labels);
 }
 
 // ── Editar ──
@@ -297,8 +351,9 @@ function editar(ticker) {
   if (!r) return;
   document.getElementById("ticker").value = r.ticker;
   setNomeEmpresa(r.nome || '');
-  for (const f of fields) { document.getElementById(f).value = r[f]; }
-  fields.forEach(f => { validateField(f, r[f]); updateScore(f); });
+  for (const f of fields) { document.getElementById(f).value = Number.isFinite(r[f]) ? r[f] : ''; }
+  setDividaNA(!Number.isFinite(r.divida));
+  fields.forEach(f => { validateField(f, Number.isFinite(r[f]) ? r[f] : NaN); updateScore(f); });
   showResult(r);
   if (window.innerWidth <= 700) switchTab('left', document.querySelector('.tab-bar button'));
   else document.getElementById('panelLeft').scrollIntoView({behavior:'smooth'});
@@ -333,11 +388,7 @@ function abrirRadar(ticker) {
   document.getElementById('radarModalTitle').textContent = r.ticker + ' — Radar';
   document.getElementById('radarModalSub').textContent   = 'IFV ' + r.ifv.toFixed(2) + ' · ' + r.classificacao;
 
-  const scores = [
-    r.sroe ?? scoreROE(r.roe),  r.spl  ?? scorePL(r.pl),
-    r.spvp ?? scorePVP(r.pvp),  r.sdy  ?? scoreDY(r.dy),
-    r.sdivida ?? scoreDivida(r.divida)
-  ];
+  const { labels, scores } = radarData(r);
 
   const container = document.getElementById('radarContainer');
   container.innerHTML = '';
@@ -345,17 +396,20 @@ function abrirRadar(ticker) {
   const cvs = document.createElement('canvas');
   cvs.width = cvs.height = 340;
   container.appendChild(cvs);
-  drawRadar(cvs, scores, classColor(r.classificacao), 104);
+  drawRadar(cvs, scores, classColor(r.classificacao), 104, labels);
 
-  const labels  = ['ROE','P/L','P/VP','DY','DL/EBITDA'];
-  const rawVals = [r.roe, r.pl, r.pvp, r.dy, r.divida];
-  const units   = ['%','×','×','%','×'];
-  document.getElementById('radarStats').innerHTML = labels.map((l, i) =>
-    `<div class="radar-stat">
-      <div class="radar-stat-label">${l}</div>
-      <div class="radar-stat-val" style="color:${scoreColor(scores[i])}">${rawVals[i]}${units[i]} <span style="font-size:10px;opacity:0.6">(${scores[i]}/5)</span></div>
-    </div>`
-  ).join('');
+  const units = { roe:'%', pl:'×', pvp:'×', dy:'%', divida:'×' };
+  document.getElementById('radarStats').innerHTML = fields.map(f => {
+    const ok = Number.isFinite(r[f]);
+    const s  = ok ? scoreMap[f](r[f]) : null;
+    const val = ok
+      ? `${r[f]}${units[f]} <span style="font-size:10px;opacity:0.6">(${s}/5)</span>`
+      : 'N/A';
+    return `<div class="radar-stat">
+      <div class="radar-stat-label">${statLabel[f]}</div>
+      <div class="radar-stat-val" style="color:${ok ? scoreColor(s) : 'var(--muted)'}">${val}</div>
+    </div>`;
+  }).join('');
 
   document.getElementById('radarModal').style.display = 'flex';
 }
@@ -366,17 +420,17 @@ function closeRadarModal(e) {
 
 // ── drawRadar ──
 // canvas   : elemento <canvas> já dimensionado (quadrado)
-// scores   : array[5] com valores 1-5
+// scores   : array (4 ou 5) com valores 1-5; labels deve ter o mesmo tamanho
 // color    : cor hex do ativo
 // polyR    : raio do polígono de dados em px
 //            A margem para labels = (canvas.width/2 - polyR), deve ser >= 30px
-function drawRadar(canvas, scores, color, polyR) {
+function drawRadar(canvas, scores, color, polyR, labels = ['ROE', 'P/L', 'P/VP', 'DY', 'Dívida']) {
   const ctx = canvas.getContext('2d');
   const S   = canvas.width;          // side (canvas é quadrado)
   const cx  = S / 2;
   const cy  = S / 2;
-  const N   = 5;
-  const LABELS = ['ROE', 'P/L', 'P/VP', 'DY', 'Dívida'];
+  const N   = scores.length;
+  const LABELS = labels;
 
   ctx.clearRect(0, 0, S, S);
 
@@ -534,8 +588,8 @@ function confirmarImport() {
   if (!Array.isArray(data) || !data.length) { toast("⚠ Arquivo vazio ou formato inválido"); return; }
 
   const valid = data.filter(r =>
-    r && typeof r.ticker === 'string' &&
-    fields.every(f => Number.isFinite(r[f]) && r[f] >= rangeConfig[f].min && r[f] <= rangeConfig[f].max)
+    r && typeof r.ticker === 'string' && hasValidIndicators(r) &&
+    fields.every(f => r[f] == null || (r[f] >= rangeConfig[f].min && r[f] <= rangeConfig[f].max))
   );
   if (!valid.length) { toast("⚠ Nenhum item válido encontrado"); return; }
 
@@ -544,7 +598,7 @@ function confirmarImport() {
   for (const r of valid) {
     const ticker = r.ticker.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10);
     if (!ticker) { skipped++; continue; }
-    const vals = Object.fromEntries(fields.map(f => [f, r[f]]));
+    const vals = normalizeVals(r);
     const entry = buildEntry(ticker, typeof r.nome === 'string' ? r.nome.slice(0, 120) : '',
                              vals, isoOrNow(r.updatedAt), isoOrNow(r.createdAt));
     const idx = ranking.findIndex(x => x.ticker === ticker);
@@ -651,6 +705,7 @@ function render() {
           <span class="pill" style="color:${scoreColor(spl)}">P/L ${r.pl}</span>
           <span class="pill" style="color:${scoreColor(spvp)}">P/VP ${r.pvp}</span>
           <span class="pill" style="color:${scoreColor(sdy)}">DY ${r.dy}%</span>
+          ${Number.isFinite(r.divida) ? '' : '<span class="pill">DL/EBITDA N/A</span>'}
         </div>
       </td>
       <td class="col-ts ts-cell">${fmtDate(r.updatedAt)}</td>

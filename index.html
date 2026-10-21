@@ -83,6 +83,7 @@
         <input id="divida" placeholder="Ex: 1.5" type="number" step="any" oninput="updateScore('divida')">
         <div class="score-bar"><div class="score-fill" id="bar-divida"></div></div>
         <div class="field-hint" id="hint-divida"></div>
+        <label class="na-toggle"><input type="checkbox" id="divida-na" onchange="toggleDividaNA()"> <span>Não se aplica (bancos, seguradoras)</span></label>
       </div>
     </div>
 
@@ -96,6 +97,7 @@
         <span style="font-family:var(--font-mono);font-size:11px;color:var(--muted)">/10</span>
       </div>
       <div class="result-class" id="res-class"></div>
+      <div class="result-note" id="res-note"></div>
       <div class="gauge-wrap">
         <div class="gauge-track"><div class="gauge-fill" id="res-gauge"></div></div>
         <div class="gauge-labels"><span>Muito Cara</span><span>Razoável</span><span>Extraordinária</span></div>
