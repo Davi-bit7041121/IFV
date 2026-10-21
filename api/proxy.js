@@ -52,7 +52,7 @@ async function getSession(force = false) {
 async function fetchSummary(symbol, sess) {
   const url =
     `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(symbol)}` +
-    `?modules=defaultKeyStatistics%2CfinancialData%2CsummaryDetail%2Cprice` +
+    `?modules=defaultKeyStatistics%2CfinancialData%2CsummaryDetail%2Cprice%2CassetProfile` +
     `&crumb=${encodeURIComponent(sess.crumb)}`;
   return fetchTimeout(url, { headers: { ...BASE_HEADERS, Cookie: sess.cookie } });
 }
@@ -96,6 +96,7 @@ export default async function handler(req, res) {
     const fd = result?.financialData;
     const sd = result?.summaryDetail;
     const pr = result?.price;
+    const ap = result?.assetProfile;
 
     if (!ks || !fd || !sd) return fail(res, 404, 'Ticker não encontrado: ' + symbol);
 
@@ -104,7 +105,10 @@ export default async function handler(req, res) {
     const totalCash = raw(fd.totalCash);
     const ebitda    = raw(fd.ebitda);
     const netDebt   = (totalDebt !== null && totalCash !== null) ? totalDebt - totalCash : totalDebt;
-    const divida    = (netDebt !== null && ebitda) ? round(netDebt / ebitda) : null;
+    // Bancos, seguradoras etc.: Dívida Líquida/EBITDA não se aplica (a dívida é parte da operação)
+    const setor      = ap?.sector ?? null;
+    const financeira = setor === 'Financial Services';
+    const divida     = (!financeira && netDebt !== null && ebitda) ? round(netDebt / ebitda) : null;
 
     // DY = dividendos dos últimos 12 meses / preço atual (fallback: dividendYield do Yahoo)
     const dividendRate = raw(sd.trailingAnnualDividendRate);
@@ -124,7 +128,7 @@ export default async function handler(req, res) {
 
     // Mesma origem (frontend e API no mesmo domínio): CORS aberto não é necessário.
     res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
-    return res.status(200).json({ nome, roe, pl, pvp, dy, divida });
+    return res.status(200).json({ nome, roe, pl, pvp, dy, divida, financeira, setor });
 
   } catch (err) {
     if (err.name === 'AbortError') return fail(res, 504, 'Yahoo Finance demorou demais para responder');

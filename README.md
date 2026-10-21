@@ -16,6 +16,8 @@ Cada indicador recebe uma nota de 1 a 5. O IFV é a média das notas multiplicad
 
 P/L ou P/VP negativos (empresa com prejuízo ou patrimônio negativo) recebem nota 1.
 
+**Dívida Líquida/EBITDA é opcional.** Para bancos, seguradoras e outras instituições financeiras o indicador não se aplica. Marque "Não se aplica" (o app marca sozinho quando o Yahoo classifica a empresa no setor financeiro) e o IFV passa a ser a média dos 4 indicadores restantes × 2, na mesma escala de 0 a 10.
+
 | IFV | Classificação |
 |:---:|---|
 | ≥ 9 | Extraordinária |
